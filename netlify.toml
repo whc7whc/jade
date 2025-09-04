@@ -10,9 +10,20 @@
   to = "/index.html"
   status = 200
 
-# 環境變數設定 (如果需要)
+# 環境變數設定
 [build.environment]
   NODE_VERSION = "18"
+  VUE_APP_API_URL = "https://jadeapi-production.up.railway.app"
+  VUE_APP_API_BASE_URL = "https://jadeapi-production.up.railway.app"
+  VUE_APP_CLOUDINARY_URL = "https://res.cloudinary.com/jadetainan"
+  VUE_APP_CLOUDINARY_CLOUD_NAME = "jadetainan"
+  VUE_APP_CLOUDINARY_API_KEY = "384776688611428"
+  VUE_APP_CLOUDINARY_UPLOAD_PRESET = "jade-products"
+  VUE_APP_TITLE = "JADE 電商管理系統"
+  VUE_APP_VERSION = "1.0.0"
+  VUE_APP_DEBUG = "false"
+  VUE_APP_LOG_LEVEL = "error"
+  VUE_APP_ECPAY_STAGE = "false"
 
 # 快取設定
 [[headers]]

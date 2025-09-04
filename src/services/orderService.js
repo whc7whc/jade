@@ -2,7 +2,7 @@
  * 訂單相關服務
  */
 
-const API_BASE_URL = 'https://localhost:7106/api'
+const API_BASE_URL = process.env.VUE_APP_API_BASE_URL || 'https://localhost:7106/api'
 
 const orderService = {
   /**
