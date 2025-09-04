@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API 連接測試</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+    <h1>Railway API 連接測試</h1>
+    <button onclick="testHealth()">測試健康檢查</button>
+    <button onclick="testApi()">測試 API 端點</button>
+    <div id="result"></div>
+
+    <script>
+        const API_BASE_URL = 'https://jadeapi-production.up.railway.app/api';
+        
+        async function testHealth() {
+            try {
+                const response = await axios.get('https://jadeapi-production.up.railway.app/health');
+                document.getElementById('result').innerHTML = `
+                    <h3>健康檢查成功:</h3>
+                    <pre>${JSON.stringify(response.data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                document.getElementById('result').innerHTML = `
+                    <h3>健康檢查失敗:</h3>
+                    <pre>${error.message}</pre>
+                `;
+            }
+        }
+        
+        async function testApi() {
+            try {
+                // 測試 API 端點 - 可能需要根據您的實際端點調整
+                const response = await axios.get(`${API_BASE_URL}/products`);
+                document.getElementById('result').innerHTML = `
+                    <h3>API 連接成功:</h3>
+                    <pre>${JSON.stringify(response.data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                document.getElementById('result').innerHTML = `
+                    <h3>API 連接結果:</h3>
+                    <pre>狀態碼: ${error.response?.status || 'N/A'}
+錯誤訊息: ${error.message}
+回應: ${JSON.stringify(error.response?.data || {}, null, 2)}</pre>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
