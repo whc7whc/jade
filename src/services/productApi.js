@@ -1,4 +1,5 @@
 import axios from 'axios'
+import mockApiService from './mockApiService'
 
 // 創建 axios 實例
 const api = axios.create({
@@ -24,7 +25,14 @@ api.interceptors.request.use(
 
 // 響應攔截器
 api.interceptors.response.use(
-    response => response,
+    response => {
+        // 檢查是否回傳 HTML 而不是 JSON
+        if (typeof response.data === 'string' && response.data.includes('<!DOCTYPE')) {
+            console.error('🚨 API 回傳 HTML 而不是 JSON，Railway 後端可能有問題')
+            throw new Error('API 服務異常，請稍後再試')
+        }
+        return response
+    },
     error => {
         console.error('API Error:', error.response?.data || error.message)
         
@@ -32,6 +40,12 @@ api.interceptors.response.use(
         if (error.response?.data?.error?.includes('globalization-invariant mode')) {
             console.error('🌐 後端全球化設定錯誤，需要在 Railway 設定 DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false')
             return Promise.reject(new Error('後端設定錯誤，請聯繫管理員'))
+        }
+        
+        // 處理 CORS 錯誤
+        if (error.message.includes('CORS') || error.message.includes('Failed to fetch')) {
+            console.error('🔒 CORS 錯誤，需要在 Railway 後端設定允許 Netlify 網域')
+            return Promise.reject(new Error('網路連接問題，請稍後再試'))
         }
         
         return Promise.reject(error)
@@ -49,10 +63,9 @@ export const productApi = {
                 data: response.data
             }
         } catch (error) {
-            return {
-                success: false,
-                error: error.response?.data?.message || '獲取產品列表失敗'
-            }
+            console.warn('🔄 API 失敗，使用模擬數據:', error.message)
+            // 使用模擬數據作為後備
+            return mockApiService.getMockProducts()
         }
     },
 

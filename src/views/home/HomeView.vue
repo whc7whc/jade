@@ -474,6 +474,8 @@
 </template>
 
 <script>
+import mockApiService from '@/services/mockApiService'
+
 export default {
   name: 'HomeView',
   data() {
@@ -794,7 +796,20 @@ export default {
         
       } catch (error) {
         console.error('❌ 載入廣告失敗:', error)
-        // 保留預設廣告，不清空
+        console.log('🔄 使用模擬廣告數據...')
+        
+        // 使用模擬數據
+        const mockBanners = mockApiService.getMockBanners()
+        if (mockBanners.success) {
+          this.banners = mockBanners.data.map(banner => ({
+            Id: banner.id,
+            Title: banner.title,
+            ImageUrl: banner.imageUrl,
+            LinkUrl: banner.link,
+            Description: '精選商品推薦'
+          }))
+          console.log(`✅ 載入 ${this.banners.length} 個模擬廣告`)
+        }
       }
     },
 
@@ -1047,7 +1062,21 @@ export default {
         
       } catch (error) {
         console.error('❌ 載入新品失敗:', error)
-        // 保持空陣列，不顯示假資料
+        console.log('🔄 使用模擬新品數據...')
+        
+        // 使用模擬數據
+        const mockProducts = mockApiService.getMockProducts()
+        if (mockProducts.success) {
+          // 取前 12 個作為新品
+          this.newProducts = mockProducts.data.slice(0, 12).map(product => ({
+            id: product.id,
+            name: product.name,
+            description: product.description,
+            price: this.formatPrice(product.salePrice || product.originalPrice),
+            image: product.mainImageUrl
+          }))
+          console.log(`✅ 載入 ${this.newProducts.length} 個模擬新品`)
+        }
       } finally {
         this.isLoadingNewProducts = false
       }
@@ -1134,7 +1163,24 @@ export default {
         
       } catch (error) {
         console.error('❌ 載入熱銷商品失敗:', error)
-        // 保持空陣列，不顯示假資料
+        console.log('🔄 使用模擬熱銷商品數據...')
+        
+        // 使用模擬數據
+        const mockProducts = mockApiService.getMockProducts()
+        if (mockProducts.success) {
+          // 按銷售數量排序取前 4 個
+          this.bestProducts = mockProducts.data
+            .sort((a, b) => (b.soldCount || 0) - (a.soldCount || 0))
+            .slice(0, 4)
+            .map(product => ({
+              id: product.id,
+              name: product.name,
+              description: product.description,
+              price: this.formatPrice(product.salePrice || product.originalPrice),
+              image: product.mainImageUrl
+            }))
+          console.log(`✅ 載入 ${this.bestProducts.length} 個模擬熱銷商品`)
+        }
       } finally {
         this.isLoadingBestProducts = false
       }
