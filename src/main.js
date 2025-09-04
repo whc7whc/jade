@@ -29,7 +29,7 @@ const app = createApp(App)
 app.config.globalProperties.$api = {
   baseURL: process.env.NODE_ENV === 'development'
     ? '' // 開發模式使用代理，生產模式使用完整 URL
-    : 'https://localhost:7106',
+    : process.env.VUE_APP_API_BASE_URL || 'https://jadeapi-production.up.railway.app/api',
 
   // API 客戶端類別
   async request(endpoint, options = {}) {

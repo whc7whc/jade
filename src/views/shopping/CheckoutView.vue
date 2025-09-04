@@ -845,7 +845,7 @@ export default {
 
         console.log('🚚 開始載入配送方式，會員 ID:', memberId)
 
-        const response = await fetch(`https://localhost:7106/api/Checkout/delivery-methods/${memberId}`)
+        const response = await fetch(`${process.env.VUE_APP_API_BASE_URL || 'https://jadeapi-production.up.railway.app/api'}/Checkout/delivery-methods/${memberId}`)
         
         if (response.ok) {
           const result = await response.json()
@@ -962,7 +962,7 @@ export default {
 
         console.log('💳 開始載入付款方式，會員 ID:', memberId)
 
-        const response = await fetch(`https://localhost:7106/api/Checkout/payment-methods/${memberId}`)
+        const response = await fetch(`${process.env.VUE_APP_API_BASE_URL || 'https://jadeapi-production.up.railway.app/api'}/Checkout/payment-methods/${memberId}`)
         
         if (response.ok) {
           const result = await response.json()
@@ -1241,7 +1241,7 @@ export default {
           return
         }
         
-        const response = await fetch(`https://localhost:7106/api/Checkout/shipping-fee/${memberId}?deliveryMethod=${deliveryMethod}`)
+        const response = await fetch(`${process.env.VUE_APP_API_BASE_URL || 'https://jadeapi-production.up.railway.app/api'}/Checkout/shipping-fee/${memberId}?deliveryMethod=${deliveryMethod}`)
         const result = await response.json()
         
         if (result.success) {
@@ -1550,7 +1550,7 @@ export default {
     async submitCheckout(checkoutData) {
       try {
         // 使用 CheckoutController 的 create-order API
-        const response = await fetch('https://localhost:7106/api/Checkout/create-order', {
+        const response = await fetch(`${process.env.VUE_APP_API_BASE_URL || 'https://jadeapi-production.up.railway.app/api'}/Checkout/create-order`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

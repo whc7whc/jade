@@ -66,7 +66,7 @@ const routes = [
         }
 
         // 檢查購物車是否有商品
-        const cartResponse = await fetch(`https://localhost:7106/api/Carts/user/${memberId}`)
+        const cartResponse = await fetch(`${process.env.VUE_APP_API_BASE_URL || 'https://jadeapi-production.up.railway.app/api'}/Carts/user/${memberId}`)
 
         if (cartResponse.ok) {
           const cartData = await cartResponse.json()
