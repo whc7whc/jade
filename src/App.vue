@@ -116,7 +116,7 @@ mounted() {
 },
 async login(email, password) {
   try {
-    const response = await fetch('https://localhost:7106/api/auth/login', {
+    const response = await fetch(`${process.env.VUE_APP_API_BASE_URL || 'https://jadeapi-production.up.railway.app/api'}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
@@ -188,7 +188,7 @@ async login(email, password) {
 
       try {
         // 改為新版 Web API 路徑
-        const res = await axios.post('https://localhost:7106/api/OpenAI/SendMessage', { message: input })
+        const res = await axios.post(`${process.env.VUE_APP_API_BASE_URL || 'https://jadeapi-production.up.railway.app/api'}/OpenAI/SendMessage`, { message: input })
         const aiText = res.data.reply || '很抱歉，AI 沒有回應。'
         // 替換 loading 訊息（Vue 3 直接賦值）
         const idx = this.aiMessages.findIndex(m => m.id === loadingId)

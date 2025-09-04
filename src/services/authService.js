@@ -1,7 +1,7 @@
 // 用戶認證服務
 import axios from 'axios';
 
-const API_BASE_URL = process.env.VUE_APP_API_BASE_URL || 'https://localhost:7106/api';
+const API_BASE_URL = process.env.VUE_APP_API_BASE_URL || 'https://jadeapi-production.up.railway.app/api';
 
 class AuthService {
     constructor() {

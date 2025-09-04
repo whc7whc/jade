@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API 配置檢查</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        button { padding: 10px 20px; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>🔍 API 配置檢查工具</h1>
+    
+    <div class="info">
+        <h3>環境變數檢查：</h3>
+        <p id="env-check">檢查中...</p>
+    </div>
+    
+    <div>
+        <button onclick="checkApiHealth()">測試 Railway API 健康狀態</button>
+        <button onclick="checkApiConnection()">測試 API 連接</button>
+        <button onclick="checkEnvironment()">檢查環境配置</button>
+    </div>
+    
+    <div id="results"></div>
+
+    <script>
+        // 檢查環境變數（在建置時會被替換）
+        const API_BASE_URL = process.env.VUE_APP_API_BASE_URL || '未設定';
+        
+        document.getElementById('env-check').innerHTML = `
+            VUE_APP_API_BASE_URL: <strong>${API_BASE_URL}</strong><br>
+            當前時間: ${new Date().toLocaleString()}<br>
+            環境: ${process.env.NODE_ENV || '未知'}
+        `;
+        
+        function addResult(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.innerHTML = message;
+            results.appendChild(div);
+        }
+        
+        async function checkApiHealth() {
+            try {
+                const response = await fetch('https://jadeapi-production.up.railway.app/health');
+                const data = await response.json();
+                addResult(`✅ Railway API 健康狀態: ${data.status} (${data.timestamp})`, 'success');
+            } catch (error) {
+                addResult(`❌ Railway API 連接失敗: ${error.message}`, 'error');
+            }
+        }
+        
+        async function checkApiConnection() {
+            const apiUrl = API_BASE_URL === '未設定' ? 'https://jadeapi-production.up.railway.app/api' : API_BASE_URL;
+            
+            try {
+                const response = await fetch(`${apiUrl}/Products`);
+                if (response.ok) {
+                    const data = await response.json();
+                    addResult(`✅ API 連接成功: 取得 ${data.length || 0} 個商品`, 'success');
+                } else {
+                    addResult(`⚠️ API 回應狀態: ${response.status} ${response.statusText}`, 'error');
+                }
+            } catch (error) {
+                addResult(`❌ API 連接失敗: ${error.message}`, 'error');
+            }
+        }
+        
+        function checkEnvironment() {
+            addResult(`
+                <h4>環境檢查結果：</h4>
+                <ul>
+                    <li>API Base URL: ${API_BASE_URL}</li>
+                    <li>當前網址: ${window.location.href}</li>
+                    <li>用戶代理: ${navigator.userAgent}</li>
+                    <li>時間戳: ${Date.now()}</li>
+                </ul>
+            `, 'info');
+        }
+        
+        // 自動執行檢查
+        window.onload = function() {
+            setTimeout(checkApiHealth, 1000);
+            setTimeout(checkEnvironment, 2000);
+        }
+    </script>
+</body>
+</html>
