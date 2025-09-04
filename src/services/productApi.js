@@ -27,6 +27,13 @@ api.interceptors.response.use(
     response => response,
     error => {
         console.error('API Error:', error.response?.data || error.message)
+        
+        // 特殊處理全球化錯誤
+        if (error.response?.data?.error?.includes('globalization-invariant mode')) {
+            console.error('🌐 後端全球化設定錯誤，需要在 Railway 設定 DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false')
+            return Promise.reject(new Error('後端設定錯誤，請聯繫管理員'))
+        }
+        
         return Promise.reject(error)
     }
 )

@@ -2,9 +2,6 @@
 import axios from 'axios'
 import userIdentityService from './userIdentityService'
 
-// API 基礎 URL - 根據用戶提供的文檔規範
-import axios from 'axios'
-
 // API 基礎設定
 const API_BASE_URL = process.env.VUE_APP_API_BASE_URL || 'https://jadeapi-production.up.railway.app'
 
