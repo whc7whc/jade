@@ -13,8 +13,8 @@
 # 環境變數設定
 [build.environment]
   NODE_VERSION = "18"
-  VUE_APP_API_URL = "https://jadeapi-production.up.railway.app/api"
-  VUE_APP_API_BASE_URL = "https://jadeapi-production.up.railway.app/api"
+  VUE_APP_API_URL = "https://jadeapi-production.up.railway.app"
+  VUE_APP_API_BASE_URL = "https://jadeapi-production.up.railway.app"
   VUE_APP_CLOUDINARY_URL = "https://res.cloudinary.com/jadetainan"
   VUE_APP_CLOUDINARY_CLOUD_NAME = "jadetainan"
   VUE_APP_CLOUDINARY_API_KEY = "384776688611428"
