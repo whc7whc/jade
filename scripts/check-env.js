@@ -4,12 +4,14 @@ console.log('NODE_ENV:', process.env.NODE_ENV)
 console.log('VUE_APP_API_BASE_URL:', process.env.VUE_APP_API_BASE_URL)
 console.log('VUE_APP_API_URL:', process.env.VUE_APP_API_URL)
 
-// 檢查是否正確載入
-if (!process.env.VUE_APP_API_BASE_URL) {
+// 只在 Netlify 環境檢查（有 NETLIFY 環境變數時）
+if (process.env.NETLIFY && !process.env.VUE_APP_API_BASE_URL) {
   console.error('❌ VUE_APP_API_BASE_URL 未設定！')
   process.exit(1)
-} else {
+} else if (process.env.VUE_APP_API_BASE_URL) {
   console.log('✅ VUE_APP_API_BASE_URL 已設定:', process.env.VUE_APP_API_BASE_URL)
+} else {
+  console.log('ℹ️ 本地建置，使用預設 API URL')
 }
 
 // 輸出到建置產出中
