@@ -49,13 +49,8 @@ export function validateImageFile(file) {
 
 // 🔥 偵測 API 基礎 URL
 function getApiBaseUrl() {
-  // 開發環境通常是 localhost:port
-  if (process.env.NODE_ENV === 'development') {
-    return process.env.VUE_APP_API_BASE_URL || 'https://localhost:7106' // 🔥 修正為您的端口
-  }
-  
-  // 生產環境
-  return process.env.VUE_APP_API_BASE_URL || ''
+  // 統一使用 Railway API
+  return process.env.VUE_APP_API_BASE_URL || 'https://jadeapi-production.up.railway.app'
 }
 
 // 🔥 設定 Axios 預設配置

@@ -141,7 +141,7 @@ import authService from '@/services/authService'
 
 const router = useRouter()
 const { proxy } = getCurrentInstance()
-const API_BASE = 'https://localhost:7106'
+const API_BASE = process.env.VUE_APP_API_BASE_URL || 'https://jadeapi-production.up.railway.app'
 
 const isSignUpMode = ref(false)
 const isLoading = ref(false)

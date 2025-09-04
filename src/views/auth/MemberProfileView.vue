@@ -273,8 +273,9 @@ const submitForm = async () => {
       formData.append('ProfileImgFile', avatarFile.value)
     }
 
+    const API_BASE = process.env.VUE_APP_API_BASE_URL || 'https://jadeapi-production.up.railway.app'
     await axios.post(
-      `https://localhost:7106/api/Auth/${memberId}/profile`,
+      `${API_BASE}/api/Auth/${memberId}/profile`,
       formData,
       {
         headers: {
@@ -288,7 +289,7 @@ const submitForm = async () => {
     if (avatarFile.value) {
       try {
         // 嘗試獲取更新後的會員資料
-        const profileResponse = await axios.get(`https://localhost:7106/api/Auth/${memberId}/profile`);
+        const profileResponse = await axios.get(`${API_BASE}/api/Auth/${memberId}/profile`);
         console.log('📋 會員資料:', profileResponse.data);
         
         // 尋找頭像 URL

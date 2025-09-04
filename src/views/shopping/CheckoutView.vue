@@ -1576,7 +1576,8 @@ export default {
 
     async validateCheckoutBeforeProcess(memberId) {
       try {
-        const response = await fetch(`https://localhost:7106/api/Checkout/validate/${memberId}`, {
+        const API_BASE = process.env.VUE_APP_API_BASE_URL || 'https://jadeapi-production.up.railway.app'
+        const response = await fetch(`${API_BASE}/api/Checkout/validate/${memberId}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -1660,7 +1661,7 @@ export default {
         console.log('✅ 訂單建立成功，訂單ID:', orderResult.orderId)
         
         // 🔥 修正：使用環境變數中的 ngrok URL
-        const ngrokUrl = process.env.VUE_APP_NGROK_URL || 'https://localhost:7106'
+        const ngrokUrl = process.env.VUE_APP_API_BASE_URL || 'https://jadeapi-production.up.railway.app'
         const paymentUrl = `${ngrokUrl}/api/payments/ecpay-checkout/${orderResult.orderId}`
         
         console.log('🏦 跳轉到付款頁面:', paymentUrl)
@@ -1726,7 +1727,8 @@ export default {
         
         console.log('� 建立訂單資料:', checkoutData)
         
-        const response = await fetch('https://localhost:7106/api/Checkout/create-order', {
+        const API_BASE = process.env.VUE_APP_API_BASE_URL || 'https://jadeapi-production.up.railway.app'
+        const response = await fetch(`${API_BASE}/api/Checkout/create-order`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'

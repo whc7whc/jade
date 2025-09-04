@@ -468,7 +468,7 @@ const router = useRouter()
 const { proxy } = getCurrentInstance()
 
 // 設定 axios 預設 baseURL，方便呼叫 API（請依實際後端 URL 調整）
-axios.defaults.baseURL = 'https://localhost:7106'
+axios.defaults.baseURL = process.env.VUE_APP_API_BASE_URL || 'https://jadeapi-production.up.railway.app'
 
 // 使用 Vuex store
 const store = useStore()

@@ -2,7 +2,10 @@
  * 訂單相關服務
  */
 
-const API_BASE_URL = process.env.VUE_APP_API_BASE_URL || 'https://localhost:7106/api'
+import axios from 'axios'
+
+// API 基礎 URL
+const API_BASE_URL = process.env.VUE_APP_API_BASE_URL || 'https://jadeapi-production.up.railway.app'
 
 const orderService = {
   /**

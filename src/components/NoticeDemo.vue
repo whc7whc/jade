@@ -146,7 +146,7 @@ export default {
         
         // 如果是網路錯誤或後端服務器未啟動，提供明確的錯誤訊息
         if (error.message.includes('fetch') || error.message.includes('Failed to fetch')) {
-          this.error = '無法連接到後端 API 伺服器 (https://localhost:7106)。請確認後端服務已啟動並且可存取。';
+          this.error = `無法連接到後端 API 伺服器 (${process.env.VUE_APP_API_BASE_URL || 'https://jadeapi-production.up.railway.app'})。請確認後端服務已啟動並且可存取。`;
         }
       } finally {
         this.loading = false;

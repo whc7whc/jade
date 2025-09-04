@@ -258,7 +258,8 @@ const isValidImageFormat = (url) => {
 
 const fetchUserProfile = async () => {
   try {
-    const res = await axios.get(`https://localhost:7106/api/Auth/${memberId}/profile`)
+    const API_BASE = process.env.VUE_APP_API_BASE_URL || 'https://jadeapi-production.up.railway.app'
+    const res = await axios.get(`${API_BASE}/api/Auth/${memberId}/profile`)
     const data = res.data
     
     user.name = data.name || ''
@@ -284,9 +285,9 @@ const fetchUserProfile = async () => {
       if (data.profileImg.startsWith('http')) {
         avatarUrl = data.profileImg
       } else if (data.profileImg.startsWith('/')) {
-        avatarUrl = `https://localhost:7106${data.profileImg}`
+        avatarUrl = `${API_BASE}${data.profileImg}`
       } else {
-        avatarUrl = `https://localhost:7106/${data.profileImg}`
+        avatarUrl = `${API_BASE}/${data.profileImg}`
       }
       user.avatar = avatarUrl
       originalAvatar.value = avatarUrl
@@ -509,7 +510,7 @@ const saveChanges = async () => {
     }
 
     const response = await axios.post(
-      `https://localhost:7106/api/Auth/${memberId}/profile`,
+      `${API_BASE}/api/Auth/${memberId}/profile`,
       formData,
       {
         headers: {

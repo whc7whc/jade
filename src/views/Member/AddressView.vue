@@ -627,7 +627,7 @@ export default {
     ]
   }
 ],
-      API_BASE: 'https://localhost:7106', // 換成你的 API URL
+      API_BASE: process.env.VUE_APP_API_BASE_URL || 'https://jadeapi-production.up.railway.app', // 換成你的 API URL
       memberId: '', // 改成空字串，動態帶入
     };
   },

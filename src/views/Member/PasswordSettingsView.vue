@@ -211,7 +211,7 @@ export default {
       // 其他
       lastPasswordChange: null,
       memberId: '',
-      API_BASE: 'https://localhost:7106',
+      API_BASE: process.env.VUE_APP_API_BASE_URL || 'https://jadeapi-production.up.railway.app',
       
       // 常見弱密碼列表（實際應用中應該更完整）
       commonPasswords: [

@@ -208,7 +208,7 @@ export default {
       formData.append('file', file)
 
       // 🔥 修復：使用正確的 API 基礎 URL
-      const apiBaseUrl = process.env.VUE_APP_API_BASE_URL || 'https://localhost:7106'
+      const apiBaseUrl = process.env.VUE_APP_API_BASE_URL || 'https://jadeapi-production.up.railway.app'
       const uploadUrl = `${apiBaseUrl}/api/Products/upload-image`
       
       console.log('📡 單檔上傳 URL:', uploadUrl)
@@ -247,7 +247,7 @@ export default {
       })
 
       // 🔥 修復：使用正確的 API 基礎 URL
-      const apiBaseUrl = process.env.VUE_APP_API_BASE_URL || 'https://localhost:7106'
+      const apiBaseUrl = process.env.VUE_APP_API_BASE_URL || 'https://jadeapi-production.up.railway.app'
       const uploadUrl = `${apiBaseUrl}/api/Products/upload-multiple-images`
       
       console.log('📡 批量上傳 URL:', uploadUrl)
