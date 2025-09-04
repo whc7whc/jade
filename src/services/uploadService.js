@@ -1,6 +1,6 @@
 class UploadService {
     constructor() {
-        this.baseURL = process.env.VUE_APP_API_BASE_URL || 'https://localhost:7106/api'
+        this.baseURL = process.env.VUE_APP_API_BASE_URL || 'https://jadeapi-production.up.railway.app'
 
         // Cloudinary 配置
         this.cloudinaryConfig = {

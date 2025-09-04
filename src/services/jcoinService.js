@@ -1,8 +1,8 @@
 import axios from 'axios'
 import userIdentityService from './userIdentityService'
 
-// API ?��? URL
-const API_BASE_URL = `${process.env.VUE_APP_API_BASE_URL || 'https://jadeapi-production.up.railway.app'}/api`
+// API 基礎 URL
+const API_BASE_URL = process.env.VUE_APP_API_BASE_URL || 'https://jadeapi-production.up.railway.app'
 
 // ?�建專用??axios 實�?
 const jcoinApi = axios.create({

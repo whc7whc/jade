@@ -89,10 +89,9 @@ export function useCart() {
     return Math.max(0, subtotal - discount)
   })
 
-  // API 狀態相關的計算屬性
   const apiUrl = computed(() => {
     if (loading.value) return '連接中...'
-    if (apiConnected.value) return process.env.VUE_APP_API_BASE_URL || 'https://jadeapi-production.up.railway.app/api'
+    if (apiConnected.value) return process.env.VUE_APP_API_BASE_URL || 'https://jadeapi-production.up.railway.app'
     return '連接失敗'
   })
 

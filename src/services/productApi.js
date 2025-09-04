@@ -2,7 +2,7 @@ import axios from 'axios'
 
 // 創建 axios 實例
 const api = axios.create({
-    baseURL: `${process.env.VUE_APP_API_BASE_URL || 'https://jadeapi-production.up.railway.app'}/api`,
+    baseURL: process.env.VUE_APP_API_BASE_URL || 'https://jadeapi-production.up.railway.app',
     timeout: 30000,
     headers: {
         'Content-Type': 'application/json'

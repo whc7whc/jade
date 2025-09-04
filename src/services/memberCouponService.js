@@ -2,7 +2,7 @@ import axios from 'axios'
 import userIdentityService from './userIdentityService'
 
 // API 基礎 URL
-const API_BASE_URL = `${process.env.VUE_APP_API_BASE_URL || 'https://jadeapi-production.up.railway.app'}/api`
+const API_BASE_URL = process.env.VUE_APP_API_BASE_URL || 'https://jadeapi-production.up.railway.app'
 
 // 創建專用的 axios 實例
 const memberCouponApi = axios.create({

@@ -687,8 +687,7 @@ export default {
   methods: {
     // ✅ API 客戶端初始化（只保留一個）
     initializeApi() {
-      // 🚨 緊急修正：強制使用 Railway API
-      const API_BASE_URL = `${process.env.VUE_APP_API_BASE_URL || 'https://jadeapi-production.up.railway.app'}/api`
+      const API_BASE_URL = process.env.VUE_APP_API_BASE_URL || 'https://jadeapi-production.up.railway.app'
       
       class ApiClient {
         constructor(baseUrl) {

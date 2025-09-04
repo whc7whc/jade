@@ -15,7 +15,7 @@ class CartService {
     })
 
     // 直接後端 API URL（用於新的購物車功能）
-    this.directApiUrl = `${process.env.VUE_APP_API_BASE_URL || 'https://localhost:7106/api'}/Carts`
+    this.directApiUrl = `${process.env.VUE_APP_API_BASE_URL || 'https://jadeapi-production.up.railway.app'}/Carts`
 
     // 請求攔截器 - 添加認證 token
     this.http.interceptors.request.use(
