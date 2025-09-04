@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>簽到功能測試</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.22.4/dist/sweetalert2.all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+
+<body>
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0"><i class="fas fa-calendar-check me-2"></i>簽到功能測試</h4>
+                    </div>
+                    <div class="card-body">
+                        <!-- 成員 ID 輸入 -->
+                        <div class="mb-3">
+                            <label for="memberId" class="form-label">測試會員 ID:</label>
+                            <input type="number" class="form-control" id="memberId" placeholder="請輸入會員 ID (例如: 11)"
+                                value="11">
+                        </div>
+
+                        <!-- API 基礎 URL 設定 -->
+                        <div class="mb-3">
+                            <label for="apiBaseUrl" class="form-label">API 基礎 URL:</label>
+                            <input type="text" class="form-control" id="apiBaseUrl" placeholder="請輸入 API URL"
+                                value="https://localhost:7106">
+                        </div>
+
+                        <!-- 連線狀態 -->
+                        <div class="mb-3">
+                            <div class="d-flex align-items-center">
+                                <span class="me-2">連線狀態:</span>
+                                <span id="connectionStatus" class="badge bg-secondary">未測試</span>
+                            </div>
+                        </div>
+
+                        <!-- 操作按鈕 -->
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-start mb-4">
+                            <button class="btn btn-info" onclick="testConnection()">
+                                <i class="fas fa-wifi me-2"></i>測試連線
+                            </button>
+                            <button class="btn btn-secondary" onclick="quickConnectionTest()">
+                                <i class="fas fa-bolt me-2"></i>快速檢查
+                            </button>
+                            <button class="btn btn-primary" onclick="getCheckinInfo()">
+                                <i class="fas fa-info-circle me-2"></i>查詢簽到狀態
+                            </button>
+                            <button class="btn btn-success" onclick="performCheckin()">
+                                <i class="fas fa-calendar-plus me-2"></i>執行簽到
+                            </button>
+                        </div>
+
+                        <!-- 測試工具按鈕 -->
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-start mb-4">
+                            <button class="btn btn-warning" onclick="simulateYesterdayCheckin()">
+                                <i class="fas fa-calendar-minus me-2"></i>模擬昨天簽到
+                            </button>
+                            <button class="btn btn-danger" onclick="resetCheckinStatus()">
+                                <i class="fas fa-trash-restore me-2"></i>重置簽到狀態
+                            </button>
+                            <button class="btn btn-info" onclick="simulateStreakCheckin()">
+                                <i class="fas fa-fire me-2"></i>模擬連續簽到
+                            </button>
+                        </div>
+
+                        <!-- 結果顯示區域 -->
+                        <div class="accordion" id="resultsAccordion">
+                            <!-- 簽到狀態查詢結果 -->
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="statusHeading">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                        data-bs-target="#statusCollapse">
+                                        <i class="fas fa-info-circle me-2"></i>簽到狀態查詢結果
+                                    </button>
+                                </h2>
+                                <div id="statusCollapse" class="accordion-collapse collapse"
+                                    data-bs-parent="#resultsAccordion">
+                                    <div class="accordion-body">
+                                        <pre id="statusResult" class="bg-light p-3 rounded">尚未查詢</pre>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 簽到執行結果 -->
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="checkinHeading">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                        data-bs-target="#checkinCollapse">
+                                        <i class="fas fa-calendar-check me-2"></i>簽到執行結果
+                                    </button>
+                                </h2>
+                                <div id="checkinCollapse" class="accordion-collapse collapse"
+                                    data-bs-parent="#resultsAccordion">
+                                    <div class="accordion-body">
+                                        <pre id="checkinResult" class="bg-light p-3 rounded">尚未執行</pre>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 錯誤日誌 -->
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="errorHeading">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                        data-bs-target="#errorCollapse">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>錯誤日誌
+                                    </button>
+                                </h2>
+                                <div id="errorCollapse" class="accordion-collapse collapse"
+                                    data-bs-parent="#resultsAccordion">
+                                    <div class="accordion-body">
+                                        <pre id="errorLog" class="bg-danger text-white p-3 rounded">無錯誤</pre>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 清除結果 -->
+                        <div class="mt-3">
+                            <button class="btn btn-secondary btn-sm" onclick="clearResults()">
+                                <i class="fas fa-trash me-2"></i>清除結果
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- API 文檔說明 -->
+                <div class="card mt-4">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="fas fa-book me-2"></i>API 規格說明</h5>
+                    </div>
+                    <div class="card-body">
+                        <h6>查詢簽到狀態 API:</h6>
+                        <code>GET /api/Members/{memberId}/Checkin/Info</code>
+
+                        <h6 class="mt-3">執行簽到 API:</h6>
+                        <code>POST /api/Members/{memberId}/Checkin</code>
+
+                        <h6 class="mt-3">預期回應格式:</h6>
+                        <pre class="bg-light p-2 rounded">
+// Checkin/Info 回應
+{
+  "memberId": 11,
+  "today": "2025-08-22",
+  "signedToday": true,
+  "checkinStreak": 3,
+  "todayReward": 0.3,
+  "serverTime": "2025-08-22T10:05:00",
+  "unit": "jcoin",
+  "scale": 10
+}
+
+// Checkin 回應
+{
+  "memberId": 11,
+  "signedToday": true,
+  "checkinStreak": 4,
+  "reward": 0.4,
+  "beforeBalance": 18.6,
+  "afterBalance": 19.0,
+  "verificationCode": "CHK-20250822-11",
+  "createdAt": "2025-08-22T10:06:12"
+}
+                        </pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // 更新連線狀態顯示
+        function updateConnectionStatus(status, className) {
+            const statusElement = document.getElementById('connectionStatus');
+            statusElement.textContent = status;
+            statusElement.className = `badge ${className}`;
+        }
+
+        // 測試 API 連線
+        async function testConnection() {
+            const apiBaseUrl = document.getElementById('apiBaseUrl').value.trim();
+
+            if (!apiBaseUrl) {
+                Swal.fire('錯誤', '請輸入 API 基礎 URL', 'error');
+                return;
+            }
+
+            updateConnectionStatus('測試中...', 'bg-warning');
+
+            try {
+                // 先嘗試健康檢查端點
+                const response = await axios.get(`${apiBaseUrl}/api/health`, {
+                    timeout: 5000
+                });
+
+                updateConnectionStatus('已連線', 'bg-success');
+                Swal.fire('成功', 'API 連線測試成功', 'success');
+
+            } catch (error) {
+                // 如果健康檢查失敗，嘗試使用簽到查詢端點測試連線
+                if (error.response?.status === 404) {
+                    console.log('健康檢查端點不存在，嘗試使用簽到端點測試連線...');
+
+                    try {
+                        // 使用會員 ID 11 測試簽到端點連線
+                        const testResponse = await axios.get(`${apiBaseUrl}/api/Members/11/Checkin/Info`, {
+                            timeout: 5000
+                        });
+
+                        updateConnectionStatus('已連線', 'bg-success');
+                        Swal.fire({
+                            title: '連線成功',
+                            text: 'API 伺服器可連線（透過簽到端點驗證）',
+                            icon: 'success'
+                        });
+
+                    } catch (checkinError) {
+                        if (checkinError.response?.status >= 400 && checkinError.response?.status < 500) {
+                            // 4xx 錯誤表示伺服器有回應，只是業務邏輯問題
+                            updateConnectionStatus('已連線', 'bg-success');
+                            Swal.fire({
+                                title: '連線成功',
+                                text: 'API 伺服器可連線（伺服器有回應）',
+                                icon: 'info'
+                            });
+                        } else {
+                            updateConnectionStatus('連線失敗', 'bg-danger');
+                            logError('連線測試失敗', checkinError);
+                            Swal.fire('錯誤', `連線失敗: ${checkinError.message}`, 'error');
+                        }
+                    }
+                } else if (error.code === 'ECONNABORTED') {
+                    updateConnectionStatus('連線失敗', 'bg-danger');
+                    logError('連線測試失敗', error);
+                    Swal.fire('錯誤', '連線超時，請檢查 API URL 是否正確', 'error');
+                } else {
+                    updateConnectionStatus('連線失敗', 'bg-danger');
+                    logError('連線測試失敗', error);
+                    Swal.fire('錯誤', `連線失敗: ${error.message}`, 'error');
+                }
+            }
+        }
+
+        // 快速連線檢查 - 直接使用簽到端點
+        async function quickConnectionTest() {
+            const apiBaseUrl = document.getElementById('apiBaseUrl').value.trim();
+            const memberId = document.getElementById('memberId').value.trim();
+
+            if (!apiBaseUrl) {
+                Swal.fire('錯誤', '請輸入 API 基礎 URL', 'error');
+                return;
+            }
+
+            if (!memberId) {
+                Swal.fire('錯誤', '請輸入會員 ID', 'error');
+                return;
+            }
+
+            updateConnectionStatus('快速檢查中...', 'bg-warning');
+
+            try {
+                // 直接使用簽到查詢端點測試連線
+                const response = await axios.get(`${apiBaseUrl}/api/Members/${memberId}/Checkin/Info`, {
+                    timeout: 3000
+                });
+
+                updateConnectionStatus('已連線', 'bg-success');
+                Swal.fire({
+                    title: '連線成功！',
+                    html: `
+                        <div class="text-start">
+                            <p><strong>伺服器狀態:</strong> 正常</p>
+                            <p><strong>API 端點:</strong> 可用</p>
+                            <p><strong>會員狀態:</strong> ${response.data.signedToday ? '今日已簽到' : '今日尚未簽到'}</p>
+                            <p><strong>連續天數:</strong> ${response.data.checkinStreak} 天</p>
+                        </div>
+                    `,
+                    icon: 'success'
+                });
+
+            } catch (error) {
+                if (error.response?.status >= 400 && error.response?.status < 500) {
+                    // 4xx 錯誤表示伺服器有回應
+                    updateConnectionStatus('已連線', 'bg-success');
+                    Swal.fire({
+                        title: '連線成功',
+                        text: `伺服器可連線（HTTP ${error.response.status}）`,
+                        icon: 'info'
+                    });
+                } else if (error.code === 'ECONNABORTED') {
+                    updateConnectionStatus('連線失敗', 'bg-danger');
+                    Swal.fire('錯誤', '連線超時，請檢查網路或伺服器狀態', 'error');
+                } else {
+                    updateConnectionStatus('連線失敗', 'bg-danger');
+                    Swal.fire('錯誤', `連線失敗: ${error.message}`, 'error');
+                }
+                logError('快速連線檢查失敗', error);
+            }
+        }
+
+        // 重置簽到狀態（清除今日簽到記錄）
+        async function resetCheckinStatus() {
+            const memberId = document.getElementById('memberId').value.trim();
+            const apiBaseUrl = document.getElementById('apiBaseUrl').value.trim();
+
+            if (!memberId || !apiBaseUrl) {
+                Swal.fire('錯誤', '請填入會員 ID 和 API URL', 'error');
+                return;
+            }
+
+            // 確認操作
+            const confirmResult = await Swal.fire({
+                title: '確認重置',
+                text: '這將清除今日的簽到記錄，讓您可以重新測試簽到功能',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: '確定重置',
+                cancelButtonText: '取消'
+            });
+
+            if (!confirmResult.isConfirmed) return;
+
+            try {
+                // 這需要後端提供清除今日簽到記錄的 API
+                // 如果沒有，我們可以直接刪除 localStorage 來模擬
+
+                // 清除 localStorage 中的快取
+                const today = new Date().toISOString().split('T')[0];
+                localStorage.removeItem(`checkin:lastDate:${memberId}`);
+                localStorage.removeItem(`checkin:streak:${memberId}`);
+                localStorage.removeItem(`checkin:reward:${memberId}`);
+
+                console.log('已清除本地簽到快取');
+
+                Swal.fire({
+                    title: '重置完成',
+                    html: `
+                        <div class="text-start">
+                            <p>📝 已清除本地簽到快取</p>
+                            <p>🔄 請重新查詢簽到狀態</p>
+                            <p class="text-warning small">注意：這只清除本地快取，後端資料需要手動清除</p>
+                        </div>
+                    `,
+                    icon: 'success'
+                });
+
+                // 自動重新查詢狀態
+                setTimeout(() => {
+                    getCheckinInfo();
+                }, 1000);
+
+            } catch (error) {
+                console.error('重置簽到狀態失敗:', error);
+                Swal.fire('錯誤', `重置失敗: ${error.message}`, 'error');
+            }
+        }
+
+        // 模擬昨天簽到（修改 localStorage 來測試連續簽到）
+        async function simulateYesterdayCheckin() {
+            const memberId = document.getElementById('memberId').value.trim();
+
+            if (!memberId) {
+                Swal.fire('錯誤', '請填入會員 ID', 'error');
+                return;
+            }
+
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+            // 設定昨天的簽到記錄
+            localStorage.setItem(`checkin:lastDate:${memberId}`, yesterdayStr);
+            localStorage.setItem(`checkin:streak:${memberId}`, '1');
+            localStorage.setItem(`checkin:reward:${memberId}`, '0.1');
+
+            Swal.fire({
+                title: '模擬完成',
+                html: `
+                    <div class="text-start">
+                        <p>📅 已設定昨天 (${yesterdayStr}) 簽到記錄</p>
+                        <p>🔥 連續簽到天數：1 天</p>
+                        <p>💰 昨日獲得：0.1 J幣</p>
+                        <p class="text-info small mt-2">現在執行簽到應該會顯示連續第 2 天</p>
+                    </div>
+                `,
+                icon: 'success'
+            });
+
+            // 自動重新查詢狀態
+            setTimeout(() => {
+                getCheckinInfo();
+            }, 1000);
+        }
+
+        // 模擬連續簽到測試
+        async function simulateStreakCheckin() {
+            const memberId = document.getElementById('memberId').value.trim();
+
+            if (!memberId) {
+                Swal.fire('錯誤', '請填入會員 ID', 'error');
+                return;
+            }
+
+            // 讓用戶選擇要模擬的連續天數
+            const { value: streakDays } = await Swal.fire({
+                title: '設定連續簽到天數',
+                input: 'number',
+                inputLabel: '請輸入要模擬的連續簽到天數 (1-30)',
+                inputValue: 5,
+                inputAttributes: {
+                    min: 1,
+                    max: 30,
+                    step: 1
+                },
+                showCancelButton: true,
+                confirmButtonText: '設定',
+                cancelButtonText: '取消'
+            });
+
+            if (!streakDays || streakDays < 1 || streakDays > 30) return;
+
+            // 計算前一天的日期
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+            // 計算預期獎勵（7天循環）
+            const dayInCycle = ((streakDays - 1) % 7) + 1;
+            const expectedReward = dayInCycle * 0.1;
+
+            // 設定模擬資料
+            localStorage.setItem(`checkin:lastDate:${memberId}`, yesterdayStr);
+            localStorage.setItem(`checkin:streak:${memberId}`, streakDays.toString());
+            localStorage.setItem(`checkin:reward:${memberId}`, expectedReward.toString());
+
+            Swal.fire({
+                title: '連續簽到模擬完成',
+                html: `
+                    <div class="text-start">
+                        <p>📅 上次簽到：${yesterdayStr}</p>
+                        <p>🔥 連續簽到：${streakDays} 天</p>
+                        <p>💰 預期今日獎勵：${((streakDays % 7) + 1) * 0.1} J幣</p>
+                        <p class="text-info small mt-2">現在執行簽到應該會顯示連續第 ${parseInt(streakDays) + 1} 天</p>
+                    </div>
+                `,
+                icon: 'success'
+            });
+
+            // 自動重新查詢狀態
+            setTimeout(() => {
+                getCheckinInfo();
+            }, 1000);
+        }
+
+        // 查詢簽到狀態
+        async function getCheckinInfo() {
+            const memberId = document.getElementById('memberId').value.trim();
+            const apiBaseUrl = document.getElementById('apiBaseUrl').value.trim();
+
+            if (!memberId || !apiBaseUrl) {
+                Swal.fire('錯誤', '請填入會員 ID 和 API URL', 'error');
+                return;
+            }
+
+            try {
+                const url = `${apiBaseUrl}/api/Members/${memberId}/Checkin/Info`;
+                console.log('查詢簽到狀態 URL:', url);
+
+                const response = await axios.get(url, {
+                    timeout: 10000,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = {
+                    success: true,
+                    url: url,
+                    status: response.status,
+                    data: response.data,
+                    timestamp: new Date().toLocaleString()
+                };
+
+                document.getElementById('statusResult').textContent = JSON.stringify(result, null, 2);
+
+                // 展開結果
+                const statusCollapse = new bootstrap.Collapse(document.getElementById('statusCollapse'), {
+                    show: true
+                });
+
+                Swal.fire({
+                    title: '查詢成功',
+                    html: `
+                        <div class="text-start">
+                            <p><strong>會員 ID:</strong> ${response.data.memberId}</p>
+                            <p><strong>今日日期:</strong> ${response.data.today}</p>
+                            <p><strong>今日已簽到:</strong> ${response.data.signedToday ? '是' : '否'}</p>
+                            <p><strong>連續簽到天數:</strong> ${response.data.checkinStreak}</p>
+                            <p><strong>今日獎勵:</strong> ${response.data.todayReward} ${response.data.unit}</p>
+                            <p><strong>伺服器時間:</strong> ${response.data.serverTime}</p>
+                        </div>
+                    `,
+                    icon: 'success'
+                });
+
+            } catch (error) {
+                const errorResult = {
+                    success: false,
+                    url: `${apiBaseUrl}/api/Members/${memberId}/Checkin/Info`,
+                    error: error.message,
+                    status: error.response?.status,
+                    data: error.response?.data,
+                    timestamp: new Date().toLocaleString()
+                };
+
+                document.getElementById('statusResult').textContent = JSON.stringify(errorResult, null, 2);
+                logError('查詢簽到狀態失敗', error);
+
+                Swal.fire('錯誤', `查詢失敗: ${error.message}`, 'error');
+            }
+        }
+
+        // 執行簽到
+        async function performCheckin() {
+            const memberId = document.getElementById('memberId').value.trim();
+            const apiBaseUrl = document.getElementById('apiBaseUrl').value.trim();
+
+            if (!memberId || !apiBaseUrl) {
+                Swal.fire('錯誤', '請填入會員 ID 和 API URL', 'error');
+                return;
+            }
+
+            try {
+                const url = `${apiBaseUrl}/api/Members/${memberId}/Checkin`;
+                console.log('執行簽到 URL:', url);
+
+                const response = await axios.post(url, {}, {
+                    timeout: 10000,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = {
+                    success: true,
+                    url: url,
+                    status: response.status,
+                    data: response.data,
+                    timestamp: new Date().toLocaleString()
+                };
+
+                document.getElementById('checkinResult').textContent = JSON.stringify(result, null, 2);
+
+                // 展開結果
+                const checkinCollapse = new bootstrap.Collapse(document.getElementById('checkinCollapse'), {
+                    show: true
+                });
+
+                Swal.fire({
+                    title: '簽到成功！',
+                    html: `
+                        <div class="text-start">
+                            <p><strong>獲得獎勵:</strong> ${response.data.reward} J幣</p>
+                            <p><strong>簽到前餘額:</strong> ${response.data.beforeBalance}</p>
+                            <p><strong>簽到後餘額:</strong> ${response.data.afterBalance}</p>
+                            <p><strong>連續簽到天數:</strong> ${response.data.checkinStreak}</p>
+                            <p><strong>驗證碼:</strong> ${response.data.verificationCode}</p>
+                        </div>
+                    `,
+                    icon: 'success'
+                });
+
+            } catch (error) {
+                const errorResult = {
+                    success: false,
+                    url: `${apiBaseUrl}/api/Members/${memberId}/Checkin`,
+                    error: error.message,
+                    status: error.response?.status,
+                    data: error.response?.data,
+                    timestamp: new Date().toLocaleString()
+                };
+
+                document.getElementById('checkinResult').textContent = JSON.stringify(errorResult, null, 2);
+                logError('執行簽到失敗', error);
+
+                if (error.response?.status === 400) {
+                    Swal.fire('提示', '可能今日已經簽到過了', 'info');
+                } else {
+                    Swal.fire('錯誤', `簽到失敗: ${error.message}`, 'error');
+                }
+            }
+        }
+
+        // 記錄錯誤
+        function logError(message, error) {
+            const errorLog = document.getElementById('errorLog');
+            const timestamp = new Date().toLocaleString();
+            const errorText = `[${timestamp}] ${message}\n${error.stack || error.message}\n\n`;
+
+            if (errorLog.textContent === '無錯誤') {
+                errorLog.textContent = errorText;
+            } else {
+                errorLog.textContent += errorText;
+            }
+        }
+
+        // 清除結果
+        function clearResults() {
+            document.getElementById('statusResult').textContent = '尚未查詢';
+            document.getElementById('checkinResult').textContent = '尚未執行';
+            document.getElementById('errorLog').textContent = '無錯誤';
+            updateConnectionStatus('未測試', 'bg-secondary');
+        }
+
+        // 頁面載入時的初始化
+        document.addEventListener('DOMContentLoaded', function () {
+            // 嘗試從 localStorage 獲取之前的設定
+            const savedApiUrl = localStorage.getItem('testApiUrl');
+            const savedMemberId = localStorage.getItem('testMemberId');
+
+            if (savedApiUrl) {
+                document.getElementById('apiBaseUrl').value = savedApiUrl;
+            }
+
+            if (savedMemberId) {
+                document.getElementById('memberId').value = savedMemberId;
+            }
+
+            // 監聽輸入變化，自動保存設定
+            document.getElementById('apiBaseUrl').addEventListener('input', function () {
+                localStorage.setItem('testApiUrl', this.value);
+            });
+
+            document.getElementById('memberId').addEventListener('input', function () {
+                localStorage.setItem('testMemberId', this.value);
+            });
+        });
+    </script>
+</body>
+
+</html>

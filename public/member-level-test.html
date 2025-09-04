@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新會員升級進度測試</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .test-card {
+            border-left: 4px solid #007bff;
+            margin-bottom: 1rem;
+        }
+
+        .success-card {
+            border-left-color: #28a745;
+        }
+
+        .warning-card {
+            border-left-color: #ffc107;
+        }
+
+        .error-card {
+            border-left-color: #dc3545;
+        }
+
+        .debug-output {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 0.25rem;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container mt-4">
+        <h1 class="mb-4"><i class="fas fa-user-plus me-2"></i>新會員升級進度測試</h1>
+        <p class="text-muted">測試修正後的會員註冊和升級進度顯示功能</p>
+
+        <!-- 測試控制面板 -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-control me-2"></i>測試控制面板</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3 mb-2">
+                                <button class="btn btn-primary w-100" onclick="testNewMemberRegistration()">
+                                    <i class="fas fa-user-plus me-2"></i>模擬新會員註冊
+                                </button>
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <button class="btn btn-success w-100" onclick="testMemberLevelProgress()">
+                                    <i class="fas fa-chart-line me-2"></i>測試升級進度
+                                </button>
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <button class="btn btn-info w-100" onclick="testExistingMemberLogin()">
+                                    <i class="fas fa-sign-in-alt me-2"></i>測試現有會員登入
+                                </button>
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <button class="btn btn-warning w-100" onclick="clearAllAndReset()">
+                                    <i class="fas fa-trash me-2"></i>清除重置
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 測試結果顯示 -->
+        <div id="test-results"></div>
+
+        <!-- 即時狀態監控 -->
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h6><i class="fas fa-user me-2"></i>當前用戶狀態</h6>
+                    </div>
+                    <div class="card-body">
+                        <div id="user-status" class="debug-output">未載入</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h6><i class="fas fa-cog me-2"></i>系統狀態</h6>
+                    </div>
+                    <div class="card-body">
+                        <div id="system-status" class="debug-output">準備就緒</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 快速連結 -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h6><i class="fas fa-external-link-alt me-2"></i>快速連結</h6>
+                    </div>
+                    <div class="card-body">
+                        <a href="/member/level" class="btn btn-outline-primary me-2" target="_blank">
+                            <i class="fas fa-crown me-2"></i>會員等級頁面
+                        </a>
+                        <a href="/member-debug.html" class="btn btn-outline-secondary me-2" target="_blank">
+                            <i class="fas fa-bug me-2"></i>除錯工具
+                        </a>
+                        <a href="/login" class="btn btn-outline-success me-2" target="_blank">
+                            <i class="fas fa-sign-in-alt me-2"></i>登入頁面
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let testCounter = 0;
+
+        // 顯示測試結果
+        function showTestResult(title, success, message, details = null) {
+            const resultDiv = document.getElementById('test-results');
+            const cardClass = success ? 'success-card' : 'error-card';
+            const iconClass = success ? 'fas fa-check-circle text-success' : 'fas fa-times-circle text-danger';
+
+            testCounter++;
+
+            const resultHTML = `
+                <div class="card test-card ${cardClass}">
+                    <div class="card-body">
+                        <h6><i class="${iconClass} me-2"></i>測試 ${testCounter}: ${title}</h6>
+                        <p class="mb-2">${message}</p>
+                        ${details ? `<div class="debug-output">${details}</div>` : ''}
+                    </div>
+                </div>
+            `;
+
+            resultDiv.innerHTML = resultHTML + resultDiv.innerHTML;
+            updateUserStatus();
+        }
+
+        // 更新用戶狀態顯示
+        function updateUserStatus() {
+            const statusDiv = document.getElementById('user-status');
+
+            try {
+                const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+                const memberId = localStorage.getItem('memberId');
+                const authToken = localStorage.getItem('authToken');
+
+                const status = {
+                    '登入狀態': authToken ? '已登入' : '未登入',
+                    '用戶類型': currentUser.userType || '無',
+                    '用戶名稱': currentUser.username || '無',
+                    '會員ID': memberId || currentUser.memberId || '無',
+                    '用戶資料': currentUser
+                };
+
+                statusDiv.textContent = JSON.stringify(status, null, 2);
+            } catch (error) {
+                statusDiv.textContent = `錯誤: ${error.message}`;
+            }
+        }
+
+        // 測試新會員註冊
+        async function testNewMemberRegistration() {
+            try {
+                // 清除現有資料
+                localStorage.clear();
+
+                // 模擬註冊新會員
+                const newMemberData = {
+                    username: `測試會員_${Date.now()}`,
+                    email: `test${Date.now()}@example.com`,
+                    userType: 'member',
+                    password: '123456'
+                };
+
+                // 模擬 authService 的註冊邏輯
+                const userId = Date.now();
+                const newUser = {
+                    userId: userId,
+                    memberId: userId, // 關鍵修正：設定會員ID
+                    username: newMemberData.username,
+                    userType: 'member',
+                    email: newMemberData.email,
+                    membershipLevel: 'bronze',
+                    totalOrders: 0,
+                    totalSpent: 0,
+                    joinDate: new Date().toISOString().split('T')[0]
+                };
+
+                // 儲存到 localStorage（模擬 saveUserToStorage）
+                localStorage.setItem('currentUser', JSON.stringify(newUser));
+                localStorage.setItem('memberId', newUser.memberId.toString());
+                localStorage.setItem('authToken', `token-${userId}`);
+
+                showTestResult(
+                    '新會員註冊',
+                    true,
+                    '✅ 新會員註冊成功，已正確設定會員ID',
+                    `會員ID: ${newUser.memberId}\n用戶名: ${newUser.username}\n等級: ${newUser.membershipLevel}`
+                );
+
+            } catch (error) {
+                showTestResult(
+                    '新會員註冊',
+                    false,
+                    `❌ 註冊失敗: ${error.message}`,
+                    error.stack
+                );
+            }
+        }
+
+        // 測試會員等級進度
+        async function testMemberLevelProgress() {
+            try {
+                const memberId = localStorage.getItem('memberId');
+                if (!memberId) {
+                    throw new Error('請先模擬會員註冊');
+                }
+
+                // 模擬 memberLevelService.getLevelSummary() 的預設回應
+                const defaultSummary = {
+                    currentLevel: {
+                        id: 1,
+                        name: "銅卡會員",
+                        requiredAmount: 0,
+                        description: "新會員預設等級"
+                    },
+                    nextLevel: {
+                        id: 2,
+                        name: "銀卡會員",
+                        requiredAmount: 1000,
+                        description: "進階會員等級"
+                    },
+                    totalSpent: 0,
+                    progress: {
+                        percentage: 0,
+                        currentAmount: 0,
+                        requiredForNext: 1000,
+                        isMaxLevel: false
+                    }
+                };
+
+                showTestResult(
+                    '升級進度載入',
+                    true,
+                    '✅ 新會員升級進度正常顯示',
+                    JSON.stringify(defaultSummary, null, 2)
+                );
+
+            } catch (error) {
+                showTestResult(
+                    '升級進度載入',
+                    false,
+                    `❌ 進度載入失敗: ${error.message}`,
+                    error.stack
+                );
+            }
+        }
+
+        // 測試現有會員登入
+        async function testExistingMemberLogin() {
+            try {
+                // 模擬現有會員登入
+                const existingUser = {
+                    userId: 123,
+                    memberId: 123,
+                    username: '買家小明',
+                    userType: 'member',
+                    email: 'ming@example.com',
+                    membershipLevel: 'gold',
+                    totalOrders: 25,
+                    totalSpent: 15000,
+                    joinDate: '2024-01-15'
+                };
+
+                localStorage.setItem('currentUser', JSON.stringify(existingUser));
+                localStorage.setItem('memberId', existingUser.memberId.toString());
+                localStorage.setItem('authToken', 'mock-token-123');
+
+                showTestResult(
+                    '現有會員登入',
+                    true,
+                    '✅ 現有會員登入成功，升級進度應可正常顯示',
+                    `會員: ${existingUser.username}\n等級: ${existingUser.membershipLevel}\n累積消費: ${existingUser.totalSpent}元`
+                );
+
+            } catch (error) {
+                showTestResult(
+                    '現有會員登入',
+                    false,
+                    `❌ 登入失敗: ${error.message}`,
+                    error.stack
+                );
+            }
+        }
+
+        // 清除並重置
+        function clearAllAndReset() {
+            localStorage.clear();
+            document.getElementById('test-results').innerHTML = '';
+            testCounter = 0;
+
+            showTestResult(
+                '系統重置',
+                true,
+                '🔄 所有資料已清除，系統已重置',
+                '準備進行新的測試'
+            );
+        }
+
+        // 更新系統狀態
+        function updateSystemStatus() {
+            const systemDiv = document.getElementById('system-status');
+            const now = new Date().toLocaleString('zh-TW');
+
+            systemDiv.textContent = `最後更新: ${now}\n瀏覽器: ${navigator.userAgent}`;
+        }
+
+        // 頁面載入時初始化
+        window.onload = function () {
+            updateUserStatus();
+            updateSystemStatus();
+
+            // 每秒更新狀態
+            setInterval(() => {
+                updateUserStatus();
+            }, 1000);
+        };
+    </script>
+</body>
+
+</html>

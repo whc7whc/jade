@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>J幣顯示值測試</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        .test-case {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .result {
+            font-weight: bold;
+            color: #007bff;
+        }
+
+        .error {
+            color: #dc3545;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>J幣整數值測試（改版後）</h1>
+
+    <div class="test-case">
+        <h3>新的獎勵規則（整數J幣）</h3>
+        <div id="api-test"></div>
+    </div>
+
+    <div class="test-case">
+        <h3>7天週期獎勵計算</h3>
+        <div id="manual-test"></div>
+    </div>
+
+    <script>
+        // 模擬後端 API 回應（現在直接是顯示值）
+        const mockApiResponses = [
+            { todayReward: 1, day: 1 },   // 顯示 1 J幣
+            { todayReward: 2, day: 2 },   // 顯示 2 J幣
+            { todayReward: 3, day: 3 },   // 顯示 3 J幣
+            { todayReward: 10, day: 7 },  // 顯示 10 J幣
+        ];
+
+        // 測試轉換邏輯
+        function testConversion() {
+            const apiTestDiv = document.getElementById('api-test');
+            const manualTestDiv = document.getElementById('manual-test');
+
+            // 測試 API 回應處理
+            apiTestDiv.innerHTML = '<h4>後端回應直接顯示：</h4>';
+            mockApiResponses.forEach(response => {
+                apiTestDiv.innerHTML += `
+                    <p>第${response.day}天: 
+                    <span class="result">獲得 ${response.todayReward} J幣</span></p>
+                `;
+            });
+
+            // 測試手動轉換
+            manualTestDiv.innerHTML = '<h4>7天週期獎勵計算：</h4>';
+            for (let day = 1; day <= 7; day++) {
+                const reward = day === 7 ? 10 : day;  // 第7天特殊處理
+
+                manualTestDiv.innerHTML += `
+                    <p>第${day}天: 
+                    <span class="result">獲得 ${reward} J幣</span></p>
+                `;
+            }
+        }
+
+        // 運行測試
+        testConversion();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,293 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins&display=swap");
+
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+body,
+input {
+  font-family: "Poppins", sans-serif;
+}
+
+/* Sign up */
+
+.container {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  background-color: #efe9dd;
+  overflow: hidden;
+}
+
+.container::before {
+  content: "";
+  position: absolute;
+  width: 2000px;
+  height: 200px;
+  border-radius: 50%;
+  background: linear-gradient(-45deg, #dcd6d0, #8d8d8d);
+  top: 90%;
+  right: 38%;
+  transform: translateY(-50%);
+  z-index: 6;
+  transition: transform 1.2s ease-in-out 0s;
+  /* 立即滑出 */
+}
+
+.forms-container {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+}
+
+.signin-signup {
+  position: absolute;
+  top: 50%;
+  left: 75%;
+  transform: translate(-50%, -50%);
+  width: 50%;
+  display: grid;
+  grid-template-columns: 1fr;
+  z-index: 5;
+  transition: 1.2s ease-in-out;
+  /* 修改：統一時間，移除延遲 */
+}
+
+form {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding: 0 5rem;
+  overflow: hidden;
+  grid-column: 1/2;
+  grid-row: 1/2;
+  transition: transform 0.4s ease-out, opacity 0.4s ease-out;
+}
+
+form.signin-form {
+  z-index: 2;
+}
+
+form.signup-form {
+  z-index: 1;
+  opacity: 0;
+}
+
+.title {
+  font-size: 1.8rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: #3d3b3b;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.input-field {
+  max-width: 400px;
+  width: 100%;
+  height: 58px;
+  background-color: #fff9ed;
+  margin: 10px 0;
+  border-radius: 55px;
+  display: grid;
+  grid-template-columns: 15% 85%;
+  padding: 0.4rem;
+}
+
+.input-field i {
+  text-align: center;
+  line-height: 40px;
+  color: #acacac;
+  font-size: 1.2rem;
+}
+
+.input-field input {
+  background: none;
+  outline: none;
+  border: none;
+  line-height: 1;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.input-field input::placeholder {
+  color: #aaa;
+  font-weight: 500;
+}
+
+.btn {
+  width: 150px;
+  height: 49px;
+  border: none;
+  outline: none;
+  border-radius: 49px;
+  cursor: pointer;
+  background-color: #3d3b3b;
+  color: #fff;
+  text-transform: uppercase;
+  font-weight: 600;
+  margin: 10px 0;
+  transition: 0.5s;
+}
+
+.btn:hover {
+  background-color: rgba(5, 65, 33, 0.34);
+}
+
+.social-text {
+  padding: 0.5rem 0;
+  font-size: 1rem;
+}
+
+.social-media {
+  display: flex;
+  justify-content: center;
+}
+
+.social-icon {
+  height: 60px;
+  width: 60px;
+  border: 3px solid #333;
+  margin: 0 0.45rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-decoration: none;
+  color: #333;
+  font-size: 2.8rem;
+  border-radius: 20%;
+  transform: 0.3s;
+}
+
+.social-icon:hover {
+  color: rgba(5, 65, 33, 0.34);
+  border-color: rgba(5, 65, 33, 0.34);
+}
+
+/* 讓 select 有滑鼠變化效果 */
+.input-field select {
+  cursor: pointer;
+}
+
+.panels-container {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  /* background-color: #fff9ed; */
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: space-around;
+  text-align: center;
+  z-index: 7;
+}
+
+.left-panel {
+  pointer-events: all;
+  padding: 3rem 17% 2rem 12%;
+}
+
+.right-panel {
+  pointer-events: none;
+  padding: 3rem 12% 2rem 17%;
+}
+
+.panel .content {
+  color: #fff9ed;
+}
+
+.panel h3 {
+  font-weight: 600;
+  line-height: 1;
+  font-size: 1.5rem;
+  color: #3d3b3b;
+}
+
+.panel p {
+  font-size: 0.95rem;
+  padding: 0.7rem 0;
+  color: #3d3b3b;
+}
+
+.btn.transparent {
+  margin: 0;
+  background: none;
+  border: 2px solid #3d3b3b;
+  width: 130px;
+  height: 41px;
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.image {
+  width: 100%;
+}
+
+/* 預設左面板位置 */
+.left-panel .content,
+.left-panel .image {
+  transform: translateX(0);
+  /* 原位 */
+  transition: transform 1s ease-in-out 0.6s;
+  /* 延遲 0.6s，慢慢出現 */
+}
+
+.right-panel .content,
+.right-panel .image {
+  transform: translateX(800px);
+}
+
+/*ANIMATION*/
+
+.container.sign-up-mode::before {
+  transform: translate(100%, -50%);
+  right: 52%;
+}
+
+.container.sign-up-mode .left-panel .image,
+.container.sign-up-mode .left-panel .content {
+  transform: translateX(-800px);
+  transition: transform 1.2s ease-in-out 0s;
+  /* 立即滑出 */
+}
+
+.container.sign-up-mode .right-panel .content,
+.container.sign-up-mode .right-panel .image {
+  transform: translateX(0px);
+  transition: transform 0.6s ease-in-out 0.2s;
+  /* 可以加延遲讓先滑表單後滑圖片 */
+}
+
+.container.sign-up-mode .left-panel {
+  pointer-events: none;
+}
+
+.container.sign-up-mode .right-panel {
+  pointer-events: all;
+}
+
+.container.sign-up-mode .signin-signup {
+  left: 25%;
+}
+
+.container.sign-up-mode form.signin-form {
+  z-index: 1;
+  opacity: 0;
+}
+
+.container.sign-up-mode form.signup-form {
+  z-index: 2;
+  opacity: 1;
+}

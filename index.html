@@ -1,0 +1,33 @@
+<head>
+    <!-- ...existing code... -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>onMounted(() => {
+const initGoogleAuth = () => {
+if (window.google && window.google.accounts) {
+window.google.accounts.id.initialize({
+client_id: '您的客戶端ID', // 更換為您的 Google Client ID
+callback: handleGoogleSignIn,
+ux_mode: 'popup', // 新增這行
+auto_select: false, // 新增這行
+});
+
+// 渲染登入按鈕
+window.google.accounts.id.renderButton(
+document.getElementById('googleSignInButton'),
+{
+type: 'standard',
+theme: 'outline',
+size: 'large',
+text: 'signin_with',
+shape: 'rectangular',
+locale: 'zh_TW',
+width: 250 // 指定寬度
+}
+);
+} else {
+setTimeout(initGoogleAuth, 1000);
+}
+};
+
+initGoogleAuth();
+});

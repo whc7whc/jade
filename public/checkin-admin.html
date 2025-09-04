@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>簽到系統管理工具</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.22.4/dist/sweetalert2.all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+
+<body>
+    <div class="container mt-4">
+        <div class="row justify-content-center">
+            <div class="col-md-10">
+                <div class="card">
+                    <div class="card-header bg-dark text-white">
+                        <h4 class="mb-0"><i class="fas fa-tools me-2"></i>簽到系統管理工具</h4>
+                        <small class="text-muted">用於測試和管理簽到功能</small>
+                    </div>
+                    <div class="card-body">
+                        <!-- 基本設定 -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label for="apiBaseUrl" class="form-label">API 基礎 URL:</label>
+                                <input type="text" class="form-control" id="apiBaseUrl" value="https://localhost:7106">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="memberId" class="form-label">會員 ID:</label>
+                                <input type="number" class="form-control" id="memberId" value="11">
+                            </div>
+                        </div>
+
+                        <!-- 查詢功能 -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0"><i class="fas fa-search me-2"></i>查詢功能</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-grid gap-2 d-md-flex">
+                                    <button class="btn btn-primary" onclick="queryCheckinInfo()">
+                                        <i class="fas fa-info-circle me-2"></i>查詢簽到狀態
+                                    </button>
+                                    <button class="btn btn-secondary" onclick="queryCheckinHistory()">
+                                        <i class="fas fa-history me-2"></i>查詢簽到歷史
+                                    </button>
+                                    <button class="btn btn-info" onclick="queryMemberPoints()">
+                                        <i class="fas fa-coins me-2"></i>查詢會員餘額
+                                    </button>
+                                </div>
+                                <div id="queryResult" class="mt-3">
+                                    <div class="alert alert-light">
+                                        <small class="text-muted">查詢結果將顯示在這裡</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 簽到測試 -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-success text-white">
+                                <h5 class="mb-0"><i class="fas fa-calendar-check me-2"></i>簽到測試</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-grid gap-2 d-md-flex">
+                                    <button class="btn btn-success" onclick="performCheckin()">
+                                        <i class="fas fa-calendar-plus me-2"></i>執行簽到
+                                    </button>
+                                    <button class="btn btn-warning" onclick="testConsecutiveCheckin()">
+                                        <i class="fas fa-fire me-2"></i>測試連續簽到
+                                    </button>
+                                </div>
+                                <div id="checkinResult" class="mt-3">
+                                    <div class="alert alert-light">
+                                        <small class="text-muted">簽到結果將顯示在這裡</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 資料管理 -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-danger text-white">
+                                <h5 class="mb-0"><i class="fas fa-database me-2"></i>資料管理 (危險操作)</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    以下操作會修改資料庫資料，請謹慎使用！
+                                </div>
+                                <div class="d-grid gap-2 d-md-flex">
+                                    <button class="btn btn-outline-danger" onclick="clearTodayCheckin()">
+                                        <i class="fas fa-eraser me-2"></i>清除今日簽到
+                                    </button>
+                                    <button class="btn btn-outline-warning" onclick="setYesterdayCheckin()">
+                                        <i class="fas fa-calendar-minus me-2"></i>設置昨日簽到
+                                    </button>
+                                    <button class="btn btn-outline-info" onclick="adjustCheckinStreak()">
+                                        <i class="fas fa-edit me-2"></i>調整連續天數
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 結果顯示 -->
+                        <div class="card">
+                            <div class="card-header bg-info text-white">
+                                <h5 class="mb-0"><i class="fas fa-file-alt me-2"></i>操作日誌</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="operationLog"
+                                    style="height: 300px; overflow-y: auto; background: #f8f9fa; padding: 15px; border-radius: 5px;">
+                                    <p class="text-muted mb-0">操作日誌將顯示在這裡...</p>
+                                </div>
+                                <div class="mt-2">
+                                    <button class="btn btn-sm btn-secondary" onclick="clearLog()">
+                                        <i class="fas fa-trash me-1"></i>清除日誌
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // 日誌功能
+        function addLog(message, type = 'info') {
+            const logContainer = document.getElementById('operationLog');
+            const timestamp = new Date().toLocaleString();
+            const typeClass = {
+                'info': 'text-info',
+                'success': 'text-success',
+                'warning': 'text-warning',
+                'error': 'text-danger'
+            }[type] || 'text-info';
+
+            const logEntry = document.createElement('div');
+            logEntry.className = 'mb-1';
+            logEntry.innerHTML = `<span class="text-muted">[${timestamp}]</span> <span class="${typeClass}">${message}</span>`;
+
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        function clearLog() {
+            document.getElementById('operationLog').innerHTML = '<p class="text-muted mb-0">操作日誌將顯示在這裡...</p>';
+        }
+
+        // 顯示結果
+        function showResult(elementId, data, isSuccess = true) {
+            const element = document.getElementById(elementId);
+            const alertClass = isSuccess ? 'alert-success' : 'alert-danger';
+            element.innerHTML = `
+                <div class="alert ${alertClass}">
+                    <pre style="margin: 0; white-space: pre-wrap;">${JSON.stringify(data, null, 2)}</pre>
+                </div>
+            `;
+        }
+
+        // API 呼叫包裝
+        async function callAPI(method, endpoint, data = null) {
+            const apiBaseUrl = document.getElementById('apiBaseUrl').value.trim();
+            const url = `${apiBaseUrl}${endpoint}`;
+
+            addLog(`${method} ${url}`, 'info');
+
+            try {
+                const config = {
+                    method: method,
+                    url: url,
+                    timeout: 10000,
+                    headers: { 'Content-Type': 'application/json' }
+                };
+
+                if (data && (method === 'POST' || method === 'PUT')) {
+                    config.data = data;
+                }
+
+                const response = await axios(config);
+                addLog(`成功: ${response.status}`, 'success');
+                return { success: true, data: response.data, status: response.status };
+            } catch (error) {
+                addLog(`失敗: ${error.message}`, 'error');
+                return {
+                    success: false,
+                    error: error.message,
+                    status: error.response?.status,
+                    data: error.response?.data
+                };
+            }
+        }
+
+        // 查詢簽到狀態
+        async function queryCheckinInfo() {
+            const memberId = document.getElementById('memberId').value.trim();
+            if (!memberId) {
+                Swal.fire('錯誤', '請輸入會員 ID', 'error');
+                return;
+            }
+
+            const result = await callAPI('GET', `/api/Members/${memberId}/Checkin/Info`);
+            showResult('queryResult', result, result.success);
+
+            if (result.success) {
+                Swal.fire({
+                    title: '查詢成功',
+                    html: `
+                        <div class="text-start">
+                            <p><strong>會員 ID:</strong> ${result.data.memberId}</p>
+                            <p><strong>今日:</strong> ${result.data.today}</p>
+                            <p><strong>已簽到:</strong> ${result.data.signedToday ? '是' : '否'}</p>
+                            <p><strong>連續天數:</strong> ${result.data.checkinStreak}</p>
+                            <p><strong>今日獎勵:</strong> ${result.data.todayReward} ${result.data.unit}</p>
+                        </div>
+                    `,
+                    icon: 'success'
+                });
+            }
+        }
+
+        // 查詢簽到歷史 (假設有這個 API)
+        async function queryCheckinHistory() {
+            const memberId = document.getElementById('memberId').value.trim();
+            if (!memberId) {
+                Swal.fire('錯誤', '請輸入會員 ID', 'error');
+                return;
+            }
+
+            // 嘗試查詢點數歷史中的簽到記錄
+            const result = await callAPI('GET', `/api/Members/${memberId}/Points/History?type=signin&pageSize=10`);
+            showResult('queryResult', result, result.success);
+        }
+
+        // 查詢會員餘額
+        async function queryMemberPoints() {
+            const memberId = document.getElementById('memberId').value.trim();
+            if (!memberId) {
+                Swal.fire('錯誤', '請輸入會員 ID', 'error');
+                return;
+            }
+
+            const result = await callAPI('GET', `/api/Members/${memberId}/Points/Balance`);
+            showResult('queryResult', result, result.success);
+        }
+
+        // 執行簽到
+        async function performCheckin() {
+            const memberId = document.getElementById('memberId').value.trim();
+            if (!memberId) {
+                Swal.fire('錯誤', '請輸入會員 ID', 'error');
+                return;
+            }
+
+            const result = await callAPI('POST', `/api/Members/${memberId}/Checkin`, {});
+            showResult('checkinResult', result, result.success);
+
+            if (result.success) {
+                Swal.fire({
+                    title: '簽到成功！',
+                    html: `
+                        <div class="text-start">
+                            <p><strong>獲得獎勵:</strong> ${result.data.reward} J幣</p>
+                            <p><strong>簽到前餘額:</strong> ${result.data.beforeBalance}</p>
+                            <p><strong>簽到後餘額:</strong> ${result.data.afterBalance}</p>
+                            <p><strong>連續天數:</strong> ${result.data.checkinStreak}</p>
+                            <p><strong>驗證碼:</strong> ${result.data.verificationCode}</p>
+                        </div>
+                    `,
+                    icon: 'success'
+                });
+            } else if (result.status === 400) {
+                Swal.fire('提示', '今日已經簽到過了', 'info');
+            }
+        }
+
+        // 測試連續簽到
+        async function testConsecutiveCheckin() {
+            Swal.fire({
+                title: '連續簽到測試',
+                html: `
+                    <div class="text-start">
+                        <p>這將依序執行以下操作：</p>
+                        <ol>
+                            <li>清除今日簽到記錄</li>
+                            <li>設置昨日簽到記錄</li>
+                            <li>執行今日簽到</li>
+                            <li>驗證連續天數是否正確</li>
+                        </ol>
+                        <p class="text-warning small">注意：這需要後端支援相關管理 API</p>
+                    </div>
+                `,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: '開始測試',
+                cancelButtonText: '取消'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    addLog('連續簽到測試功能需要後端提供管理 API', 'warning');
+                    Swal.fire('提示', '此功能需要後端提供相應的管理 API 端點', 'info');
+                }
+            });
+        }
+
+        // 清除今日簽到 (需要後端提供管理 API)
+        async function clearTodayCheckin() {
+            const confirmed = await Swal.fire({
+                title: '確認清除',
+                text: '這將清除今日的簽到記錄，此操作不可逆',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: '確定清除',
+                cancelButtonText: '取消'
+            });
+
+            if (confirmed.isConfirmed) {
+                addLog('清除今日簽到功能需要後端提供管理 API', 'warning');
+                Swal.fire('提示', '此功能需要後端提供相應的管理 API 端點', 'info');
+            }
+        }
+
+        // 設置昨日簽到 (需要後端提供管理 API)
+        async function setYesterdayCheckin() {
+            addLog('設置昨日簽到功能需要後端提供管理 API', 'warning');
+            Swal.fire('提示', '此功能需要後端提供相應的管理 API 端點', 'info');
+        }
+
+        // 調整連續天數 (需要後端提供管理 API)
+        async function adjustCheckinStreak() {
+            addLog('調整連續天數功能需要後端提供管理 API', 'warning');
+            Swal.fire('提示', '此功能需要後端提供相應的管理 API 端點', 'info');
+        }
+
+        // 頁面載入時初始化
+        document.addEventListener('DOMContentLoaded', function () {
+            addLog('簽到系統管理工具已啟動', 'success');
+
+            // 自動載入設定
+            const savedApiUrl = localStorage.getItem('adminApiUrl');
+            const savedMemberId = localStorage.getItem('adminMemberId');
+
+            if (savedApiUrl) {
+                document.getElementById('apiBaseUrl').value = savedApiUrl;
+            }
+
+            if (savedMemberId) {
+                document.getElementById('memberId').value = savedMemberId;
+            }
+
+            // 監聽設定變化
+            document.getElementById('apiBaseUrl').addEventListener('input', function () {
+                localStorage.setItem('adminApiUrl', this.value);
+            });
+
+            document.getElementById('memberId').addEventListener('input', function () {
+                localStorage.setItem('adminMemberId', this.value);
+            });
+        });
+    </script>
+</body>
+
+</html>

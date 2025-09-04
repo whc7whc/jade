@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>賣家功能測試頁面</title>
+    <style>
+        body {
+            font-family: 'Microsoft JhengHei', sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .feature-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+            background: #f9f9f9;
+        }
+        .feature-card h3 {
+            color: #34495e;
+            margin-top: 0;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 5px;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background-color: #2980b9;
+        }
+        .btn-success {
+            background-color: #27ae60;
+        }
+        .btn-success:hover {
+            background-color: #229954;
+        }
+        .info {
+            background-color: #e8f4fd;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏪 JADE 賣家功能測試</h1>
+        
+        <div class="info">
+            <strong>注意：</strong>這些功能需要先登入並擁有賣家權限才能正常使用。
+        </div>
+
+        <div class="feature-card">
+            <h3>💰 銷售報表（賣家中心）</h3>
+            <p>在賣家中心查看您的銷售數據、訂單統計和收入分析</p>
+            <p><strong>功能特色：</strong></p>
+            <ul>
+                <li>📊 銷售總覽（總收入、訂單數、平均訂單金額）</li>
+                <li>📅 日期範圍篩選</li>
+                <li>📈 報表類型選擇（每日/每週/每月）</li>
+                <li>🔍 訂單狀態篩選</li>
+                <li>📋 詳細訂單列表與分頁</li>
+                <li>💾 CSV 匯出功能</li>
+                <li>📱 響應式設計</li>
+                <li>🎯 整合在賣家中心側邊欄中</li>
+            </ul>
+            <a href="/seller" class="btn btn-success">進入賣家中心</a>
+            <p class="small text-muted mt-2">
+                <i class="fas fa-info-circle"></i>
+                進入後請點擊左側「銷售報表」功能
+            </p>
+        </div>
+
+        <div class="feature-card">
+            <h3>🎫 優惠券管理（賣家中心）</h3>
+            <p>在賣家中心建立和管理您的店鋪優惠券</p>
+            <p><strong>功能特色：</strong></p>
+            <ul>
+                <li>➕ 新增優惠券</li>
+                <li>✏️ 編輯現有優惠券</li>
+                <li>🗑️ 刪除優惠券</li>
+                <li>📊 使用統計</li>
+                <li>🎨 折扣類型選擇（百分比/固定金額）</li>
+                <li>⏰ 有效期限設定</li>
+                <li>🎯 最低消費設定</li>
+                <li>🏪 整合在賣家中心側邊欄中</li>
+            </ul>
+            <a href="/seller" class="btn">進入賣家中心</a>
+            <p class="small text-muted mt-2">
+                <i class="fas fa-info-circle"></i>
+                進入後請點擊左側「優惠券管理」功能
+            </p>
+            <hr class="my-3">
+            <p class="small"><strong>或直接訪問：</strong></p>
+            <a href="/vendor/coupons" class="btn btn-sm btn-outline-primary">獨立優惠券頁面</a>
+        </div>
+
+        <div class="feature-card">
+            <h3>🔧 技術實現</h3>
+            <p><strong>API 整合方式：</strong></p>
+            <ul>
+                <li>🔐 動態 seller ID 獲取（透過 ApplySeller API）</li>
+                <li>🔄 多重 API 端點嘗試機制</li>
+                <li>🛡️ 錯誤處理與 fallback 機制</li>
+                <li>📱 響應式 UI 設計</li>
+                <li>💾 本地儲存整合</li>
+                <li>🎨 Bootstrap 5 樣式</li>
+            </ul>
+        </div>
+
+        <div class="feature-card">
+            <h3>📝 使用說明</h3>
+            <ol>
+                <li>確保已登入 JADE 帳號</li>
+                <li>確認擁有賣家權限（isSeller = true）</li>
+                <li>點擊上方按鈕進入相應功能頁面</li>
+                <li>系統會自動獲取您的賣家 ID</li>
+                <li>如果 API 無法連接，會顯示測試資料</li>
+            </ol>
+        </div>
+
+        <div style="text-align: center; margin-top: 30px;">
+            <a href="/" class="btn">返回首頁</a>
+            <a href="/member" class="btn">會員中心</a>
+        </div>
+    </div>
+
+    <script>
+        // 簡單的功能測試
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🏪 賣家功能測試頁面載入完成');
+            console.log('📍 當前路徑:', window.location.pathname);
+            console.log('🔐 會員ID:', localStorage.getItem('memberId'));
+            console.log('👨‍💼 賣家狀態:', localStorage.getItem('isSeller'));
+            
+            // 檢查基本權限
+            const memberId = localStorage.getItem('memberId');
+            const isSeller = localStorage.getItem('isSeller');
+            
+            if (!memberId) {
+                console.warn('⚠️ 未登入，某些功能可能無法正常使用');
+            }
+            
+            if (isSeller !== 'true') {
+                console.warn('⚠️ 非賣家身份，某些功能可能無法正常使用');
+            }
+        });
+    </script>
+</body>
+</html>

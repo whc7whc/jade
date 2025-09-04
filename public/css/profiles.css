@@ -1,0 +1,206 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins&display=swap");
+
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  font-family: "Poppins", "Jost", sans-serif;
+  background-color: #efe9dd;
+  color: #3d3b3b;
+}
+
+/* 統一文字樣式 */
+body,
+input,
+select,
+button,
+label,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+span {
+  font-family: "Poppins", "Jost", sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  color: #3d3b3b;
+}
+
+/* 容器與背景 */
+.container {
+  position: relative;
+  width: 100%;
+
+  background-color: #efe9dd;
+  overflow: hidden;
+}
+
+.forms-container {
+  width: 100%;
+  padding-top: 100px;
+  /* 避開 header，依實際高度調整 */
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.profiles {
+  width: 100%;
+  max-width: 500px;
+  display: grid;
+  grid-template-columns: 1fr;
+  margin: 0 auto;
+}
+
+/* 表單區塊 */
+form {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding: 0 5rem;
+  overflow: hidden;
+  grid-column: 1/2;
+  grid-row: 1/2;
+}
+
+/* 標題樣式 */
+.title {
+  font-size: 1.8rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: #3d3b3b;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+/* 輸入欄位區塊 */
+.input-field {
+  max-width: 400px;
+  width: 100%;
+  height: 58px;
+  background-color: #fff9ed;
+  margin: 10px 0;
+  border-radius: 55px;
+  display: grid;
+  grid-template-columns: 15% 85%;
+  padding: 0.4rem;
+  border: 1px solid #ddd;
+}
+
+.input-field i {
+  text-align: center;
+  line-height: 40px;
+  color: #acacac;
+  font-size: 1.2rem;
+}
+
+.input-field input,
+.input-field select {
+  background: none;
+  outline: none;
+  border: none;
+  font-weight: 500;
+  font-size: 1rem;
+  width: 100%;
+  padding-left: 5px;
+  color: #3d3b3b;
+}
+
+.input-field input::placeholder,
+.custom-input::placeholder {
+  color: #aaa;
+  font-weight: 500;
+  font-size: 1rem;
+}
+
+/* 自定義 input (select, date) */
+.custom-input {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #3d3b3b;
+  font-family: "Poppins", sans-serif;
+  background: none;
+  outline: none;
+  border: none;
+  width: 100%;
+}
+
+/* 檔案選擇按鈕 */
+.input-field input[type="file"]::file-selector-button {
+  background-color: #3d3b3b;
+  color: #fff;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-family: "Poppins", sans-serif;
+  transition: 0.3s;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.input-field input[type="file"]::file-selector-button:hover {
+  background-color: rgba(5, 65, 33, 0.34);
+}
+
+/* Checkbox 區域 */
+.checkbox-field {
+  font-size: 0.9rem;
+  color: #555;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  width: 100%;
+  max-width: 400px;
+}
+
+.checkbox-field input {
+  accent-color: #3d3b3b;
+}
+
+/* 按鈕 */
+.btn {
+  width: 150px;
+  height: 49px;
+  border: none;
+  outline: none;
+  border-radius: 49px;
+  cursor: pointer;
+  background-color: #3d3b3b;
+  color: #fff;
+  text-transform: uppercase;
+  font-weight: 600;
+  font-size: 1rem;
+  letter-spacing: 1px;
+  margin: 10px 0;
+  transition: 0.3s;
+}
+
+.btn:hover {
+  background-color: rgba(5, 65, 33, 0.34);
+}
+
+/* RWD 手機版 */
+@media (max-width: 576px) {
+  form {
+    padding: 0 2rem;
+  }
+
+  .title {
+    font-size: 1.5rem;
+  }
+
+  .btn {
+    width: 100%;
+  }
+}

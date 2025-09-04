@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <meta name="description" content="JADE 時尚電商 - 全台最大的線上時尚購物平台，提供最新流行服飾、配件等商品">
+  <meta name="keywords" content="時尚, 服飾, 電商, 購物, 台灣, 流行, 穿搭">
+  <meta name="author" content="JADE Team">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://jade-taiwan.com/">
+  <meta property="og:title" content="JADE 時尚電商 - 全台最大服飾販售平台">
+  <meta property="og:description" content="精選來自世界各地的優質服飾與配件，讓每位顧客都能找到適合自己的完美單品">
+  <meta property="og:image" content="<%= BASE_URL %>images/og-image.jpg">
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:url" content="https://jade-taiwan.com/">
+  <meta property="twitter:title" content="JADE 時尚電商 - 全台最大服飾販售平台">
+  <meta property="twitter:description" content="精選來自世界各地的優質服飾與配件，讓每位顧客都能找到適合自己的完美單品">
+  <meta property="twitter:image" content="<%= BASE_URL %>images/og-image.jpg">
+<!-- Bootstrap CSS -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<!-- Bootstrap Icons -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Favicon -->
+  <link rel="icon" href="<%= BASE_URL %>favicon.ico" sizes="any">
+  <!-- 移除不存在的 icon 檔案引用以避免 404 錯誤 -->
+  <!-- <link rel="apple-touch-icon" sizes="180x180" href="<%= BASE_URL %>apple-touch-icon.png"> -->
+  <!-- <link rel="icon" type="image/png" sizes="32x32" href="<%= BASE_URL %>favicon-32x32.png"> -->
+  <!-- <link rel="icon" type="image/png" sizes="16x16" href="<%= BASE_URL %>favicon-16x16.png"> -->
+
+  <!-- Preload important resources -->
+  <link rel="preload" href="<%= BASE_URL %>images/main-logo.png" as="image">
+  <!-- Font Awesome CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    integrity="sha512-...省略..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <!-- Cloudinary SDK - 安全載入 -->
+  <script>
+    // 安全載入 Cloudinary Widget，避免瀏覽器兼容性錯誤
+    window.addEventListener('DOMContentLoaded', function () {
+      try {
+        if (!window.cloudinary) {
+          const script = document.createElement('script');
+          script.src = 'https://widget.cloudinary.com/v2.0/global/all.js';
+          script.async = true;
+          script.onerror = function () {
+            console.warn('⚠️ Cloudinary Widget 載入失敗，將使用預設上傳功能');
+          };
+          script.onload = function () {
+            console.log('✅ Cloudinary Widget 載入成功');
+          };
+          document.head.appendChild(script);
+        }
+      } catch (error) {
+        console.warn('⚠️ Cloudinary Widget 初始化失敗:', error.message);
+      }
+    });
+  </script>
+
+  <title>
+    <%= htmlWebpackPlugin.options.title %>
+  </title>
+</head>
+
+<body>
+  <noscript>
+    <strong>
+      很抱歉，JADE 時尚電商需要 JavaScript 才能正常運作。請啟用 JavaScript 後重新載入頁面。
+    </strong>
+  </noscript>
+  <div id="app"></div>
+  <!-- built files will be auto injected -->
+
+</body>
+
+</html>

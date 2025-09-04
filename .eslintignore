@@ -1,0 +1,6 @@
+node_modules/
+dist/
+*.min.js
+public/
+mock-api-server.js
+vue.config.js
