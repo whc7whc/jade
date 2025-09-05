@@ -599,6 +599,7 @@ import CheckoutProgress from '@/components/cart/CheckoutProgress.vue'
 import cartService from '@/services/cartService'
 import memberAddressService from '@/services/memberAddressService'
 import orderAddressService from '@/services/orderAddressService'
+import userIdentityService from '@/services/userIdentityService'
 import { formatPrice } from '@/utils/cartUtils'
 import { groupCartItemsByVendor, formatVendorName } from '@/utils/vendorUtils'
 
@@ -815,22 +816,37 @@ export default {
     
     // 獲取會員 ID（與 useCart composable 相同的邏輯）
     getCartMemberId() {
-      // 優先從 localStorage 直接獲取 memberId
+      // 優先從 localStorage 直接獲取 memberId（與隊友的登入機制相容）
       const directMemberId = localStorage.getItem('memberId')
       if (directMemberId && directMemberId !== 'null' && directMemberId !== '' && directMemberId !== 'undefined') {
         const parsedId = parseInt(directMemberId, 10)
         if (!isNaN(parsedId) && parsedId > 0) {
+          console.log('🔍 CheckoutView: 從 localStorage 獲取會員 ID:', parsedId)
           return parsedId
         }
       }
       
-      // 備用：嘗試從 cartService 獲取
-      try {
-        return cartService.getUserId()
-      } catch (error) {
-        console.warn('無法從 cartService 獲取用戶 ID:', error)
-        return null
+      // 備用：檢查其他可能的認證方式
+      const token = localStorage.getItem('authToken') ||
+                   localStorage.getItem('auth_token') ||
+                   localStorage.getItem('token')
+      const currentUser = localStorage.getItem('currentUser')
+      
+      // 如果有標準認證但沒有 memberId，嘗試從 userIdentityService 獲取
+      if (token && currentUser) {
+        try {
+          const serviceId = userIdentityService.getMemberId()
+          if (serviceId) {
+            console.log('🔍 CheckoutView: 從 userIdentityService 獲取會員 ID:', serviceId)
+            return serviceId
+          }
+        } catch (error) {
+          console.warn('⚠️ CheckoutView: 無法從 userIdentityService 獲取會員 ID:', error)
+        }
       }
+      
+      console.warn('⚠️ CheckoutView: 無法獲取會員 ID')
+      return null
     },
     
     async loadDeliveryMethods() {
