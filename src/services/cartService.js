@@ -268,7 +268,7 @@ class CartService {
     
     try {
       console.log(`🔄 正在從 API 獲取用戶 ${userId} 的購物車...`)
-      const response = await this.http.get(`/Carts/user/${userId}`)
+      const response = await this.http.get(`/api/Carts/user/${userId}`)
       console.log('📦 原始 API 回應:', response.data)
       
       // 根據新的 API 格式處理回應
@@ -319,7 +319,7 @@ class CartService {
         payload.attributeValueId = parseInt(attributeValueId)
       }
       
-      const response = await this.http.post(`/Carts/user/${userId}/items`, payload)
+      const response = await this.http.post(`/api/Carts/user/${userId}/items`, payload)
       
       console.log('✅ 商品添加成功:', response.data)
       
@@ -357,7 +357,7 @@ class CartService {
     }
     
     try {
-      const response = await this.http.put(`/Carts/user/${userId}/items/${itemId}`, {
+      const response = await this.http.put(`/api/Carts/user/${userId}/items/${itemId}`, {
         quantity: parseInt(quantity)
       })
       
@@ -391,7 +391,7 @@ class CartService {
     }
     
     try {
-      const response = await this.http.delete(`/Carts/user/${userId}/items/${itemId}`)
+      const response = await this.http.delete(`/api/Carts/user/${userId}/items/${itemId}`)
       
       if (response.data.success) {
         return {
@@ -422,7 +422,7 @@ class CartService {
     }
     
     try {
-      const response = await this.http.delete(`/Carts/user/${userId}`)
+      const response = await this.http.delete(`/api/Carts/user/${userId}`)
       
       if (response.data.success) {
         return {
@@ -457,7 +457,7 @@ class CartService {
     }
     
     try {
-      const response = await this.http.post(`/Carts/user/${userId}/coupon`, {
+      const response = await this.http.post(`/api/Carts/user/${userId}/coupon`, {
         couponCode
       })
       
@@ -492,7 +492,7 @@ class CartService {
     
     try {
       // 方案1：嘗試使用 DELETE 方法移除優惠券
-      const response = await this.http.delete(`/Carts/user/${userId}/coupon`)
+      const response = await this.http.delete(`/api/Carts/user/${userId}/coupon`)
       
       if (response.data.success) {
         return {
@@ -512,7 +512,7 @@ class CartService {
       // 方案2：如果沒有專門的移除 API，嘗試套用空的優惠券代碼
       try {
         console.log('嘗試套用空優惠券來清除...')
-        const clearResponse = await this.http.post(`/Carts/user/${userId}/coupon`, {
+        const clearResponse = await this.http.post(`/api/Carts/user/${userId}/coupon`, {
           couponCode: ''
         })
         
@@ -545,7 +545,7 @@ class CartService {
     
     try {
       console.log(`🔄 正在取得用戶 ${userId} 的購物車摘要...`)
-      const response = await this.http.get(`/Carts/user/${userId}/summary`)
+      const response = await this.http.get(`/api/Carts/user/${userId}/summary`)
       
       if (response.data.success) {
         return {
@@ -583,7 +583,7 @@ class CartService {
     
     try {
       console.log(`🔄 正在批量移除用戶 ${userId} 的購物車商品...`, itemIds)
-      const response = await this.http.delete(`/Carts/user/${userId}/items/batch`, {
+      const response = await this.http.delete(`/api/Carts/user/${userId}/items/batch`, {
         data: itemIds
       })
       
@@ -619,7 +619,7 @@ class CartService {
     
     try {
       console.log(`🔄 正在驗證用戶 ${userId} 的購物車...`)
-      const response = await this.http.post(`/Carts/user/${userId}/validate`)
+      const response = await this.http.post(`/api/Carts/user/${userId}/validate`)
       
       if (response.data.success) {
         return {

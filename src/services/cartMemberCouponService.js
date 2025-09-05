@@ -75,7 +75,7 @@ class CartMemberCouponService {
     try {
       const actualMemberId = memberId || this._ensureLoggedInUser()
       console.log(`🎫 正在獲取會員 ${actualMemberId} 的優惠券列表...`)
-      const response = await this.http.get(`/Members/${actualMemberId}/MemberCoupons`)
+      const response = await this.http.get(`/api/Members/${actualMemberId}/MemberCoupons`)
       console.log('✅ 優惠券列表:', response.data)
       
       return {
@@ -104,7 +104,7 @@ class CartMemberCouponService {
       console.log(`🎫 正在驗證優惠券...`, { couponCode, cartSubtotal, memberId: actualMemberId })
       
       // 使用購物車的套用優惠券 API 進行驗證
-      const response = await this.http.post(`/Carts/user/${actualMemberId}/coupon`, {
+      const response = await this.http.post(`/api/Carts/user/${actualMemberId}/coupon`, {
         couponCode
       })
       

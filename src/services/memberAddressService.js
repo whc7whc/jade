@@ -42,7 +42,7 @@ class MemberAddressService {
 
     try {
       console.log(`🏠 正在獲取會員 ${memberId} 的地址列表...`)
-      const response = await this.http.get(`/members/${memberId}/addresses`)
+      const response = await this.http.get(`/api/members/${memberId}/addresses`)
       
       console.log('✅ 地址列表獲取成功:', response.data)
       return {
@@ -72,7 +72,7 @@ class MemberAddressService {
 
     try {
       console.log(`🏠 正在獲取會員 ${memberId} 的地址 ${addressId}...`)
-      const response = await this.http.get(`/members/${memberId}/addresses/${addressId}`)
+      const response = await this.http.get(`/api/members/${memberId}/addresses/${addressId}`)
       
       console.log('✅ 地址詳情獲取成功:', response.data)
       return {
@@ -102,7 +102,7 @@ class MemberAddressService {
 
     try {
       console.log(`🏠 正在為會員 ${memberId} 新增地址...`, addressData)
-      const response = await this.http.post(`/members/${memberId}/addresses`, addressData)
+      const response = await this.http.post(`/api/members/${memberId}/addresses`, addressData)
       
       console.log('✅ 地址新增成功:', response.data)
       return {
@@ -133,7 +133,7 @@ class MemberAddressService {
 
     try {
       console.log(`🏠 正在更新會員 ${memberId} 的地址 ${addressId}...`, addressData)
-      const response = await this.http.put(`/members/${memberId}/addresses/${addressId}`, addressData)
+      const response = await this.http.put(`/api/members/${memberId}/addresses/${addressId}`, addressData)
       
       console.log('✅ 地址更新成功:', response.data)
       return {
@@ -163,7 +163,7 @@ class MemberAddressService {
 
     try {
       console.log(`🏠 正在刪除會員 ${memberId} 的地址 ${addressId}...`)
-      const response = await this.http.delete(`/members/${memberId}/addresses/${addressId}`)
+      const response = await this.http.delete(`/api/members/${memberId}/addresses/${addressId}`)
       
       console.log('✅ 地址刪除成功')
       return {

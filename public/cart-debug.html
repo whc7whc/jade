@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>購物車調試</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .warning { background-color: #fff3cd; color: #856404; }
+        .debug-section { border: 1px solid #ddd; padding: 15px; margin: 15px 0; }
+        pre { background: #f8f9fa; padding: 10px; overflow-x: auto; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>購物車調試工具</h1>
+    
+    <div class="debug-section">
+        <h2>1. 認證狀態</h2>
+        <div id="auth-status"></div>
+        <button onclick="setMember14()">設定會員14</button>
+        <button onclick="setMember29()">設定會員29</button>
+        <button onclick="clearAuth()">清除認證</button>
+    </div>
+    
+    <div class="debug-section">
+        <h2>2. API 測試</h2>
+        <div id="api-status"></div>
+        <button onclick="testCartAPI()">測試購物車API</button>
+        <button onclick="testCouponAPI()">測試優惠券API</button>
+        <button onclick="testAuthAPI()">測試認證API</button>
+    </div>
+    
+    <div class="debug-section">
+        <h2>3. 前端頁面測試</h2>
+        <div id="page-status"></div>
+        <button onclick="openCart()">開啟購物車頁面</button>
+        <button onclick="openCheckout()">開啟結帳頁面</button>
+        <button onclick="checkConsole()">檢查控制台錯誤</button>
+    </div>
+    
+    <div class="debug-section">
+        <h2>4. 調試結果</h2>
+        <div id="debug-results"></div>
+    </div>
+    
+    <script>
+        function setMember14() {
+            localStorage.setItem('memberId', '14');
+            localStorage.setItem('authToken', 'test-token-14');
+            localStorage.setItem('currentUser', JSON.stringify({
+                memberId: 14,
+                email: 'ChengFeng1308@gmail.com',
+                userType: 'member'
+            }));
+            updateAuthStatus();
+            log('已設定會員14認證', 'success');
+        }
+        
+        function setMember29() {
+            localStorage.setItem('memberId', '29');
+            localStorage.setItem('authToken', 'test-token-29');
+            localStorage.setItem('currentUser', JSON.stringify({
+                memberId: 29,
+                email: 'test29@example.com',
+                userType: 'member'
+            }));
+            updateAuthStatus();
+            log('已設定會員29認證', 'success');
+        }
+        
+        function clearAuth() {
+            localStorage.clear();
+            updateAuthStatus();
+            log('已清除所有認證', 'warning');
+        }
+        
+        function updateAuthStatus() {
+            const authInfo = {
+                memberId: localStorage.getItem('memberId'),
+                authToken: localStorage.getItem('authToken'),
+                currentUser: localStorage.getItem('currentUser')
+            };
+            
+            document.getElementById('auth-status').innerHTML = `
+                <div class="status ${authInfo.memberId ? 'success' : 'error'}">
+                    <strong>會員ID:</strong> ${authInfo.memberId || '未設定'}<br>
+                    <strong>認證Token:</strong> ${authInfo.authToken ? '已設定' : '未設定'}<br>
+                    <strong>用戶資料:</strong> ${authInfo.currentUser ? '已設定' : '未設定'}
+                </div>
+            `;
+        }
+        
+        async function testCartAPI() {
+            const memberId = localStorage.getItem('memberId');
+            if (!memberId) {
+                log('請先設定會員ID', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/Carts/user/${memberId}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const items = data.data.items || [];
+                    log(`購物車API成功 - 找到 ${items.length} 件商品`, 'success');
+                    console.log('購物車API回應:', data);
+                    
+                    document.getElementById('api-status').innerHTML += `
+                        <div class="status success">
+                            <strong>購物車API:</strong> ✅ 成功<br>
+                            <strong>商品數量:</strong> ${items.length}<br>
+                            <strong>總金額:</strong> $${data.data.total}
+                        </div>
+                    `;
+                } else {
+                    log('購物車API失敗: ' + data.message, 'error');
+                }
+            } catch (error) {
+                log('購物車API錯誤: ' + error.message, 'error');
+            }
+        }
+        
+        async function testCouponAPI() {
+            const memberId = localStorage.getItem('memberId');
+            if (!memberId) {
+                log('請先設定會員ID', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/Members/${memberId}/MemberCoupons`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const coupons = data.data || [];
+                    log(`優惠券API成功 - 找到 ${coupons.length} 張優惠券`, 'success');
+                    console.log('優惠券API回應:', data);
+                    
+                    document.getElementById('api-status').innerHTML += `
+                        <div class="status success">
+                            <strong>優惠券API:</strong> ✅ 成功<br>
+                            <strong>優惠券數量:</strong> ${coupons.length}
+                        </div>
+                    `;
+                } else {
+                    log('優惠券API失敗: ' + data.message, 'error');
+                }
+            } catch (error) {
+                log('優惠券API錯誤: ' + error.message, 'error');
+            }
+        }
+        
+        async function testAuthAPI() {
+            const memberId = localStorage.getItem('memberId');
+            if (!memberId) {
+                log('請先設定會員ID', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/Auth/${memberId}/profile`);
+                const data = await response.json();
+                
+                log('認證API成功', 'success');
+                console.log('認證API回應:', data);
+                
+                document.getElementById('api-status').innerHTML += `
+                    <div class="status success">
+                        <strong>認證API:</strong> ✅ 成功<br>
+                        <strong>會員名稱:</strong> ${data.name}<br>
+                        <strong>Email:</strong> ${data.email}
+                    </div>
+                `;
+            } catch (error) {
+                log('認證API錯誤: ' + error.message, 'error');
+            }
+        }
+        
+        function openCart() {
+            const newWindow = window.open('/cart', '_blank');
+            log('已開啟購物車頁面，請檢查新分頁', 'success');
+            
+            // 提示用戶檢查控制台
+            setTimeout(() => {
+                log('請檢查新分頁的瀏覽器控制台(F12)中的錯誤訊息', 'warning');
+            }, 2000);
+        }
+        
+        function openCheckout() {
+            const newWindow = window.open('/checkout', '_blank');
+            log('已開啟結帳頁面，請檢查新分頁', 'success');
+            
+            // 提示用戶檢查控制台
+            setTimeout(() => {
+                log('請檢查新分頁的瀏覽器控制台(F12)中的錯誤訊息', 'warning');
+            }, 2000);
+        }
+        
+        function checkConsole() {
+            log('請打開瀏覽器控制台(F12)檢查以下內容：', 'warning');
+            log('1. Console 分頁中的錯誤訊息(紅色)', 'warning');
+            log('2. Network 分頁中失敗的請求(紅色)', 'warning');
+            log('3. 重新載入頁面並觀察載入過程', 'warning');
+        }
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logElement = document.getElementById('debug-results');
+            logElement.innerHTML += `
+                <div class="status ${type}">
+                    <strong>[${timestamp}]</strong> ${message}
+                </div>
+            `;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+        
+        // 頁面載入時更新狀態
+        updateAuthStatus();
+        log('調試工具已載入', 'success');
+    </script>
+</body>
+</html>

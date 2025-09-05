@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>結帳頁面調試</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .debug-container { max-width: 1200px; margin: 0 auto; }
+        .debug-panel { background: white; border: 1px solid #ddd; margin: 15px 0; padding: 20px; border-radius: 8px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .warning { background-color: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        pre { background: #f8f9fa; padding: 15px; overflow-x: auto; border-radius: 5px; font-size: 12px; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; border: none; border-radius: 5px; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-warning { background: #ffc107; color: black; }
+        .btn-danger { background: #dc3545; color: white; }
+        .test-results { max-height: 400px; overflow-y: auto; }
+        .step { border-left: 4px solid #007bff; padding-left: 15px; margin: 15px 0; }
+        .iframe-container { border: 2px solid #007bff; border-radius: 8px; overflow: hidden; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <div class="debug-container">
+        <h1>🔧 結帳頁面調試工具</h1>
+        
+        <div class="debug-panel">
+            <h2>📋 測試步驟</h2>
+            <div class="step">
+                <h3>步驟 1: 設定會員認證</h3>
+                <button class="btn-primary" onclick="setMember14()">🔑 設定會員14</button>
+                <button class="btn-primary" onclick="setMember29()">🔑 設定會員29</button>
+                <button class="btn-warning" onclick="clearAuth()">🗑️ 清除認證</button>
+                <div id="auth-status"></div>
+            </div>
+            
+            <div class="step">
+                <h3>步驟 2: 測試所有 API</h3>
+                <button class="btn-success" onclick="testAllAPIs()">🚀 測試所有API</button>
+                <div id="api-results"></div>
+            </div>
+            
+            <div class="step">
+                <h3>步驟 3: 檢查結帳頁面</h3>
+                <button class="btn-primary" onclick="openCheckoutInFrame()">📱 在框架中開啟結帳頁面</button>
+                <button class="btn-primary" onclick="openCheckoutNewTab()">🔗 在新分頁開啟結帳頁面</button>
+                <button class="btn-warning" onclick="analyzeCheckoutErrors()">🔍 分析結帳錯誤</button>
+            </div>
+        </div>
+        
+        <div class="debug-panel">
+            <h2>🖥️ 結帳頁面預覽</h2>
+            <div id="checkout-preview"></div>
+        </div>
+        
+        <div class="debug-panel">
+            <h2>📊 測試結果</h2>
+            <div id="test-results" class="test-results"></div>
+        </div>
+    </div>
+    
+    <script>
+        let currentMemberId = null;
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const resultsDiv = document.getElementById('test-results');
+            const logEntry = document.createElement('div');
+            logEntry.className = `status ${type}`;
+            logEntry.innerHTML = `<strong>[${timestamp}]</strong> ${message}`;
+            resultsDiv.appendChild(logEntry);
+            resultsDiv.scrollTop = resultsDiv.scrollHeight;
+            console.log(`[${timestamp}] ${message}`);
+        }
+        
+        function setMember14() {
+            currentMemberId = 14;
+            localStorage.setItem('memberId', '14');
+            localStorage.setItem('authToken', 'test-token-14');
+            localStorage.setItem('currentUser', JSON.stringify({
+                memberId: 14,
+                email: 'ChengFeng1308@gmail.com',
+                userType: 'member'
+            }));
+            updateAuthStatus();
+            log('✅ 已設定會員14認證', 'success');
+        }
+        
+        function setMember29() {
+            currentMemberId = 29;
+            localStorage.setItem('memberId', '29');
+            localStorage.setItem('authToken', 'test-token-29');
+            localStorage.setItem('currentUser', JSON.stringify({
+                memberId: 29,
+                email: 'test29@example.com',
+                userType: 'member'
+            }));
+            updateAuthStatus();
+            log('✅ 已設定會員29認證', 'success');
+        }
+        
+        function clearAuth() {
+            currentMemberId = null;
+            localStorage.clear();
+            updateAuthStatus();
+            log('🗑️ 已清除所有認證', 'warning');
+        }
+        
+        function updateAuthStatus() {
+            const authInfo = {
+                memberId: localStorage.getItem('memberId'),
+                authToken: localStorage.getItem('authToken'),
+                currentUser: localStorage.getItem('currentUser')
+            };
+            
+            document.getElementById('auth-status').innerHTML = `
+                <div class="status ${authInfo.memberId ? 'success' : 'error'}">
+                    <strong>當前狀態:</strong><br>
+                    會員ID: ${authInfo.memberId || '未設定'}<br>
+                    認證Token: ${authInfo.authToken ? '已設定' : '未設定'}<br>
+                    用戶資料: ${authInfo.currentUser ? '已設定' : '未設定'}
+                </div>
+            `;
+        }
+        
+        async function testAPI(name, url, description) {
+            try {
+                log(`🔄 測試 ${name}...`, 'info');
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (response.ok && (data.success || data.email)) {
+                    log(`✅ ${name} 成功: ${description}`, 'success');
+                    return { success: true, data };
+                } else {
+                    log(`❌ ${name} 失敗: ${data.message || '未知錯誤'}`, 'error');
+                    return { success: false, error: data.message };
+                }
+            } catch (error) {
+                log(`❌ ${name} 錯誤: ${error.message}`, 'error');
+                return { success: false, error: error.message };
+            }
+        }
+        
+        async function testAllAPIs() {
+            const memberId = localStorage.getItem('memberId');
+            if (!memberId) {
+                log('❌ 請先設定會員ID', 'error');
+                return;
+            }
+            
+            document.getElementById('api-results').innerHTML = '<div class="status info">🔄 正在測試所有API...</div>';
+            
+            const tests = [
+                {
+                    name: '購物車API',
+                    url: `/api/Carts/user/${memberId}`,
+                    description: '購物車資料'
+                },
+                {
+                    name: '會員優惠券API', 
+                    url: `/api/Members/${memberId}/MemberCoupons`,
+                    description: '會員優惠券列表'
+                },
+                {
+                    name: '可用優惠券API',
+                    url: `/api/Coupons/UserAvailable/${memberId}`,
+                    description: '可用優惠券列表'
+                },
+                {
+                    name: '會員資料API',
+                    url: `/api/Auth/${memberId}/profile`,
+                    description: '會員個人資料'
+                }
+            ];
+            
+            let successCount = 0;
+            const results = [];
+            
+            for (const test of tests) {
+                const result = await testAPI(test.name, test.url, test.description);
+                results.push({ ...test, ...result });
+                if (result.success) successCount++;
+            }
+            
+            const resultHtml = `
+                <div class="status ${successCount === tests.length ? 'success' : 'warning'}">
+                    <h3>API 測試結果: ${successCount}/${tests.length} 成功</h3>
+                    ${results.map(r => `
+                        <div style="margin: 5px 0;">
+                            ${r.success ? '✅' : '❌'} ${r.name}: ${r.success ? '正常' : r.error}
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            
+            document.getElementById('api-results').innerHTML = resultHtml;
+            
+            if (successCount === tests.length) {
+                log('🎉 所有API測試通過！問題可能在前端邏輯', 'success');
+            } else {
+                log(`⚠️ ${tests.length - successCount} 個API測試失敗`, 'warning');
+            }
+        }
+        
+        function openCheckoutInFrame() {
+            const previewDiv = document.getElementById('checkout-preview');
+            previewDiv.innerHTML = `
+                <div class="iframe-container">
+                    <iframe 
+                        src="/checkout" 
+                        style="width: 100%; height: 600px; border: none;"
+                        onload="analyzeIframeContent(this)"
+                        onerror="log('❌ 結帳頁面載入失敗', 'error')"
+                    ></iframe>
+                </div>
+                <div class="status info">
+                    📝 請觀察上方的結帳頁面是否正常載入，並檢查瀏覽器控制台的錯誤訊息
+                </div>
+            `;
+            log('📱 已在框架中開啟結帳頁面', 'info');
+        }
+        
+        function openCheckoutNewTab() {
+            const newWindow = window.open('/checkout', '_blank');
+            log('🔗 已在新分頁開啟結帳頁面', 'info');
+            setTimeout(() => {
+                log('💡 請檢查新分頁的瀏覽器控制台(F12)中的錯誤訊息', 'warning');
+            }, 2000);
+        }
+        
+        function analyzeIframeContent(iframe) {
+            try {
+                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                const errors = [];
+                
+                // 檢查是否有錯誤訊息
+                const errorElements = iframeDoc.querySelectorAll('.error, .alert-danger, [class*="error"]');
+                if (errorElements.length > 0) {
+                    errors.push(`發現 ${errorElements.length} 個錯誤元素`);
+                }
+                
+                // 檢查是否為空白頁面
+                const bodyText = iframeDoc.body.textContent.trim();
+                if (bodyText.length < 100) {
+                    errors.push('頁面內容過少，可能載入失敗');
+                }
+                
+                if (errors.length > 0) {
+                    log(`⚠️ 結帳頁面問題: ${errors.join(', ')}`, 'warning');
+                } else {
+                    log('✅ 結帳頁面基本載入正常', 'success');
+                }
+            } catch (error) {
+                log('🔒 無法分析iframe內容（可能因為跨域限制）', 'warning');
+            }
+        }
+        
+        function analyzeCheckoutErrors() {
+            log('🔍 開始分析可能的結帳錯誤...', 'info');
+            
+            // 檢查認證狀態
+            const memberId = localStorage.getItem('memberId');
+            if (!memberId) {
+                log('❌ 認證問題：未找到會員ID', 'error');
+                return;
+            }
+            
+            // 模擬 Vue 組件的邏輯檢查
+            const checks = [
+                {
+                    name: '會員ID格式',
+                    test: () => {
+                        const id = parseInt(memberId, 10);
+                        return !isNaN(id) && id > 0;
+                    }
+                },
+                {
+                    name: 'localStorage結構',
+                    test: () => {
+                        try {
+                            const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+                            return typeof currentUser === 'object';
+                        } catch { return false; }
+                    }
+                },
+                {
+                    name: '認證Token存在',
+                    test: () => {
+                        return !!(localStorage.getItem('authToken') || 
+                                 localStorage.getItem('auth_token') || 
+                                 localStorage.getItem('token'));
+                    }
+                }
+            ];
+            
+            let passedChecks = 0;
+            checks.forEach(check => {
+                const passed = check.test();
+                if (passed) {
+                    passedChecks++;
+                    log(`✅ ${check.name}: 通過`, 'success');
+                } else {
+                    log(`❌ ${check.name}: 失敗`, 'error');
+                }
+            });
+            
+            if (passedChecks === checks.length) {
+                log('🤔 認證檢查都通過，問題可能在組件邏輯或API調用', 'warning');
+                log('💡 建議：開啟瀏覽器控制台查看詳細錯誤訊息', 'info');
+            }
+        }
+        
+        // 頁面載入時初始化
+        updateAuthStatus();
+        log('🚀 結帳頁面調試工具已準備就緒', 'success');
+        log('📋 請按照步驟進行測試，或直接點擊"測試所有API"', 'info');
+    </script>
+</body>
+</html>

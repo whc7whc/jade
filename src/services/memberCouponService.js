@@ -91,7 +91,7 @@ class MemberCouponService {
             }
 
             // 構建後端 API 路由
-            const url = `/Members/${memberId}/MemberCoupons?${queryParams}`
+            const url = `/api/Members/${memberId}/MemberCoupons?${queryParams}`
             console.log('API 請求 URL:', `${API_BASE_URL}${url}`)
 
             const response = await memberCouponApi.get(url)
@@ -491,7 +491,7 @@ class MemberCouponService {
 
             console.log(`🎫 正在取得用戶 ${memberId} 的可用優惠券...`)
             
-            const response = await memberCouponApi.get(`/Coupons/UserAvailable/${memberId}`)
+            const response = await memberCouponApi.get(`/api/Coupons/UserAvailable/${memberId}`)
             
             console.log('📦 可用優惠券回應:', response.data)
             

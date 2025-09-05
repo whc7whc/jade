@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>測試優惠券 API</title>
+</head>
+<body>
+    <h1>測試優惠券 API</h1>
+    <button onclick="testCouponAPI()">測試會員16優惠券</button>
+    <div id="result"></div>
+
+    <script>
+        // 設置會員ID
+        function setMember16() {
+            localStorage.setItem('memberId', '16');
+            localStorage.setItem('userId', '16');
+            localStorage.setItem('currentUserId', '16');
+            localStorage.setItem('authToken', 'test-token');
+            console.log('✅ 設置會員16');
+        }
+        
+        async function testCouponAPI() {
+            setMember16();
+            
+            const result = document.getElementById('result');
+            result.innerHTML = '測試中...';
+            
+            try {
+                // 直接測試 API 調用
+                const response = await fetch('/api/Members/16/MemberCoupons', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.text();
+                
+                result.innerHTML = `
+                    <h2>API 回應:</h2>
+                    <p><strong>Status:</strong> ${response.status}</p>
+                    <p><strong>URL:</strong> ${response.url}</p>
+                    <pre>${data}</pre>
+                `;
+                
+                console.log('API 回應:', response.status, data);
+                
+            } catch (error) {
+                result.innerHTML = `<p style="color: red;">錯誤: ${error.message}</p>`;
+                console.error('API 錯誤:', error);
+            }
+        }
+        
+        // 自動設置會員
+        setMember16();
+    </script>
+</body>
+</html>
