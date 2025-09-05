@@ -509,6 +509,7 @@ const saveChanges = async () => {
       formData.append('ProfileImgFile', pendingImageFile.value)
     }
 
+    const API_BASE = process.env.VUE_APP_API_BASE_URL || 'https://jadeapi-production.up.railway.app'
     const response = await axios.post(
       `${API_BASE}/api/Auth/${memberId}/profile`,
       formData,

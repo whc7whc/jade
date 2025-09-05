@@ -4,6 +4,13 @@
   # 發布目錄
   publish = "dist"
 
+# API 代理：將所有 /api/* 請求重定向到 Railway API
+[[redirects]]
+  from = "/api/*"
+  to = "https://jadeapi-production.up.railway.app/api/:splat"
+  status = 200
+  force = true
+
 # 處理 Vue Router 的歷史模式 (History Mode)
 [[redirects]]
   from = "/*"

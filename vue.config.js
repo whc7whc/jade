@@ -21,49 +21,16 @@ module.exports = defineConfig({
     port: 8084,
     host: 'localhost',
     open: true,
-    // 代理 API 請求到後端服務器
+    // 開發環境：為了讓現有程式碼中使用相對路徑 '/api/...' 的請求
+    // 能在本地開發時正確轉發到 Railway 的生產 API，啟用 proxy。
+    // 這可以避免大量修改多個檔案，快速驗證 API 是否可連通。
     proxy: {
-      '/api': {
-        target: 'https://localhost:7106',
+      '^/api': {
+        target: process.env.VUE_APP_API_BASE_URL || 'https://jadeapi-production.up.railway.app',
         changeOrigin: true,
         secure: false,
-        logLevel: 'debug',
-        onProxyReq(proxyReq, req, res) {
-          console.log('🔗 代理請求到後端:', proxyReq.path);
-          console.log('📋 原始請求:', req.url);
-        },
-        onProxyRes(proxyRes, req, res) {
-          console.log('✅ 後端回應狀態:', proxyRes.statusCode);
-          console.log('📡 回應到:', req.url);
-        },
-        onError(err, req, res) {
-          console.error('❌ 後端代理錯誤:', err);
-        }
-      },
-      // Mock 廠商登入 API（開發用）
-      '/mock': {
-        target: 'http://localhost:3001',
-        changeOrigin: true,
-        pathRewrite: {
-          '^/mock': ''
-        },
-        onError(err, req, res) {
-          // 如果 mock 服務器不存在，返回預設回應
-          if (req.url.includes('/auth/vendor/login')) {
-            res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({
-              success: true,
-              token: `mock_token_${Date.now()}`,
-              sellerId: 1,
-              sellerInfo: {
-                id: 1,
-                name: '測試廠商1',
-                email: 'vendor1@test.com',
-                status: 'Active'
-              }
-            }));
-          }
-        }
+        ws: false,
+        logLevel: 'warn'
       }
     }
   },

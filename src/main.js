@@ -27,9 +27,7 @@ const app = createApp(App)
 
 // 全域屬性和方法
 app.config.globalProperties.$api = {
-  baseURL: process.env.NODE_ENV === 'development'
-    ? '' // 開發模式使用代理，生產模式使用完整 URL
-    : process.env.VUE_APP_API_BASE_URL || 'https://jadeapi-production.up.railway.app',
+  baseURL: process.env.VUE_APP_API_BASE_URL || 'https://jadeapi-production.up.railway.app',
 
   // API 客戶端類別
   async request(endpoint, options = {}) {
