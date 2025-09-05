@@ -15,7 +15,7 @@ class CartService {
     })
 
     // 直接後端 API URL（用於新的購物車功能）
-    this.directApiUrl = `${process.env.VUE_APP_API_BASE_URL || 'https://jadeapi-production.up.railway.app'}/Carts`
+    this.directApiUrl = `${process.env.VUE_APP_API_BASE_URL || 'https://jadeapi-production.up.railway.app'}/api/Carts`
 
     // 請求攔截器 - 添加認證 token
     this.http.interceptors.request.use(
@@ -301,7 +301,7 @@ class CartService {
   /**
    * 添加商品到購物車
    */
-  async addToCart(productId, attributeValueId, quantity = 1, userId) {
+  async addToCart(userId, productId, quantity = 1, attributeValueId = null) {
     if (!userId) {
       throw new Error('未提供用戶 ID')
     }
@@ -309,11 +309,17 @@ class CartService {
     try {
       console.log(`🛒 正在添加商品到用戶 ${userId} 的購物車...`, { productId, attributeValueId, quantity })
       
-      const response = await this.http.post(`/Carts/user/${userId}/items`, {
+      const payload = {
         productId: parseInt(productId),
-        attributeValueId: parseInt(attributeValueId),
         quantity: parseInt(quantity)
-      })
+      }
+      
+      // 只有在有 attributeValueId 的時候才加入
+      if (attributeValueId) {
+        payload.attributeValueId = parseInt(attributeValueId)
+      }
+      
+      const response = await this.http.post(`/Carts/user/${userId}/items`, payload)
       
       console.log('✅ 商品添加成功:', response.data)
       
