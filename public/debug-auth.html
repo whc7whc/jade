@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>認證狀態調試</title>
+</head>
+<body>
+    <h1>認證狀態調試</h1>
+    <div id="auth-info"></div>
+    
+    <script>
+        // 模擬登入會員29
+        function simulateLogin() {
+            localStorage.setItem('memberId', '29');
+            localStorage.setItem('authToken', 'test-token');
+            localStorage.setItem('currentUser', JSON.stringify({
+                memberId: 29,
+                email: 'test@example.com',
+                userType: 'member'
+            }));
+            location.reload();
+        }
+        
+        // 模擬登入會員14
+        function simulateLogin14() {
+            localStorage.setItem('memberId', '14');
+            localStorage.setItem('authToken', 'test-token');
+            localStorage.setItem('currentUser', JSON.stringify({
+                memberId: 14,
+                email: 'ChengFeng1308@gmail.com',
+                userType: 'member'
+            }));
+            location.reload();
+        }
+        
+        // 清除認證
+        function clearAuth() {
+            localStorage.clear();
+            location.reload();
+        }
+        
+        // 顯示當前狀態
+        function displayAuthStatus() {
+            const authInfo = document.getElementById('auth-info');
+            const memberId = localStorage.getItem('memberId');
+            const authToken = localStorage.getItem('authToken');
+            const currentUser = localStorage.getItem('currentUser');
+            
+            authInfo.innerHTML = `
+                <h2>localStorage 狀態：</h2>
+                <p><strong>memberId:</strong> ${memberId || 'null'}</p>
+                <p><strong>authToken:</strong> ${authToken ? '存在' : 'null'}</p>
+                <p><strong>currentUser:</strong> ${currentUser || 'null'}</p>
+                
+                <h2>操作：</h2>
+                <button onclick="simulateLogin()">模擬登入會員29</button>
+                <button onclick="simulateLogin14()">模擬登入會員14</button>
+                <button onclick="clearAuth()">清除認證</button>
+                <button onclick="testCartAPI()">測試購物車API</button>
+                
+                <h2>API測試結果：</h2>
+                <div id="api-result"></div>
+            `;
+        }
+        
+        // 測試購物車API
+        async function testCartAPI() {
+            const memberId = localStorage.getItem('memberId');
+            if (!memberId) {
+                document.getElementById('api-result').innerHTML = '<p style="color: red;">無會員ID，無法測試</p>';
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/Carts/user/${memberId}`);
+                const data = await response.json();
+                document.getElementById('api-result').innerHTML = `
+                    <h3>購物車API結果：</h3>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                document.getElementById('api-result').innerHTML = `
+                    <p style="color: red;">API錯誤: ${error.message}</p>
+                `;
+            }
+        }
+        
+        // 頁面載入時顯示狀態
+        displayAuthStatus();
+    </script>
+</body>
+</html>

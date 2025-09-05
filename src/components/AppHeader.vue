@@ -719,7 +719,7 @@ export default {
       
       try {
         console.log('🔍 Header: 載入會員個人資料...');
-        const response = await axios.get(`${process.env.VUE_APP_API_BASE_URL || 'https://jadeapi-production.up.railway.app'}/Auth/${memberId}/profile`);
+        const response = await axios.get(`${process.env.VUE_APP_API_BASE_URL || 'https://jadeapi-production.up.railway.app'}/api/Auth/${memberId}/profile`);
         
         console.log('📋 API 回應資料:', response.data);
         
