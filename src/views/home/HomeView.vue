@@ -775,7 +775,7 @@ export default {
     async loadHomepageBanners() {
       console.log('🚀 開始載入首頁廣告...')
       try {
-        const result = await this.apiClient.get('/api/Banners/homepage')
+        const result = await this.apiClient.get('https://jadeapi-production.up.railway.app')
         console.log('📡 首頁廣告 API 回應:', result)
         
         if (result.success && result.data && result.data.data) {
