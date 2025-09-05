@@ -133,7 +133,8 @@ export default {
         console.log('🔍 從彈出廣告 API 載入...')
         
         // 🔥 使用專門的 PopupBanners API
-        const response = await fetch('/api/PopupBanners/active')
+        const API_BASE_URL = process.env.VUE_APP_API_BASE_URL || 'https://jadeapi-production.up.railway.app'
+        const response = await fetch(`${API_BASE_URL}/api/PopupBanners/active`)
         const data = await response.json()
         
         if (data.success && data.data && data.data.length > 0) {
@@ -267,7 +268,8 @@ export default {
       // 🔥 記錄點擊到彈出廣告專用 API
       try {
         const currentBannerId = this.currentBanner.id
-        const response = await fetch(`/api/PopupBanners/${currentBannerId}/click`, {
+        const API_BASE_URL = process.env.VUE_APP_API_BASE_URL || 'https://jadeapi-production.up.railway.app'
+        const response = await fetch(`${API_BASE_URL}/api/PopupBanners/${currentBannerId}/click`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -306,7 +308,8 @@ export default {
       if (!this.currentBanner?.id) return
       
       try {
-        const response = await fetch(`/api/PopupBanners/${this.currentBanner.id}/impression`, {
+        const API_BASE_URL = process.env.VUE_APP_API_BASE_URL || 'https://jadeapi-production.up.railway.app'
+        const response = await fetch(`${API_BASE_URL}/api/PopupBanners/${this.currentBanner.id}/impression`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
