@@ -18,24 +18,64 @@ export function useCart() {
     const hasStandardAuth = !!(token && currentUser)
     const hasMemberAuth = !!(memberId && memberId !== 'null' && memberId !== '' && memberId !== 'undefined')
     
+    // 詳細的調試信息
+    console.log('🔍 購物車登入狀態檢查:', {
+      memberId: memberId,
+      hasToken: !!token,
+      hasCurrentUser: !!currentUser,
+      hasStandardAuth: hasStandardAuth,
+      hasMemberAuth: hasMemberAuth,
+      allLocalStorageKeys: Object.keys(localStorage),
+      relevantData: {
+        authToken: localStorage.getItem('authToken') ? '***有值***' : null,
+        auth_token: localStorage.getItem('auth_token') ? '***有值***' : null,
+        token: localStorage.getItem('token') ? '***有值***' : null,
+        currentUser: localStorage.getItem('currentUser') ? '***有值***' : null,
+        memberId: localStorage.getItem('memberId')
+      }
+    })
+    
     // 放寬條件：只要有任何一種認證方式就算已登入
-    return hasStandardAuth || hasMemberAuth || !!memberId
+    const isLoggedIn = hasStandardAuth || hasMemberAuth || !!memberId
+    console.log(`${isLoggedIn ? '✅' : '❌'} 購物車登入檢查結果:`, isLoggedIn)
+    
+    return isLoggedIn
   }
 
   // 獲取會員 ID（相容隊友的登入機制）
   const getCartMemberId = () => {
     // 優先從 localStorage 直接獲取 memberId（與隊友的方法相同）
     const directMemberId = localStorage.getItem('memberId')
+    console.log('🔍 檢查 directMemberId:', directMemberId, typeof directMemberId)
+    
     if (directMemberId && directMemberId !== 'null' && directMemberId !== '' && directMemberId !== 'undefined') {
       const parsedId = parseInt(directMemberId, 10)
+      console.log('🔍 解析後的 memberId:', parsedId, '(原始值:', directMemberId, ')')
+      
       if (!isNaN(parsedId) && parsedId > 0) {
+        console.log('✅ 成功獲取會員 ID:', parsedId)
         return parsedId
+      } else {
+        console.warn('⚠️ memberId 解析失敗或無效:', directMemberId, '-> 解析結果:', parsedId)
       }
+    } else {
+      console.warn('⚠️ localStorage 中沒有有效的 memberId:', directMemberId)
     }
     
     // 備用：嘗試從 userIdentityService 獲取
-    const serviceId = userIdentityService.getMemberId()
-    return serviceId || null
+    try {
+      const serviceId = userIdentityService.getMemberId()
+      console.log('🔍 userIdentityService.getMemberId():', serviceId)
+      if (serviceId) {
+        console.log('✅ 從 userIdentityService 獲取會員 ID:', serviceId)
+        return serviceId
+      }
+    } catch (error) {
+      console.warn('⚠️ userIdentityService.getMemberId() 失敗:', error)
+    }
+    
+    console.error('❌ 無法獲取會員 ID')
+    return null
   }
   
   // 響應式數據

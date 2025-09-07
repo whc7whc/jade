@@ -49,6 +49,12 @@ const routes = [
     meta: { title: '購物車 - JADE' }
   },
   {
+    path: '/debug',
+    name: 'Debug',
+    component: () => import('../views/DebugView.vue'),
+    meta: { title: '調試頁面 - JADE' }
+  },
+  {
     path: '/checkout',
     name: 'Checkout',
     component: () => import('../views/shopping/CheckoutView.vue'),

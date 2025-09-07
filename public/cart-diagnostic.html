@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JADE 購物車問題診斷報告</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .status-pass { color: #28a745; }
+        .status-fail { color: #dc3545; }
+        .status-warning { color: #ffc107; }
+        .code-block { background: #f8f9fa; padding: 1rem; border-radius: 0.25rem; margin: 0.5rem 0; }
+        .test-result { margin: 1rem 0; padding: 1rem; border-radius: 0.5rem; }
+        .test-pass { background: #d4edda; border: 1px solid #c3e6cb; }
+        .test-fail { background: #f8d7da; border: 1px solid #f5c6cb; }
+        .test-warning { background: #fff3cd; border: 1px solid #ffeaa7; }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1 class="mb-4">🛒 JADE 購物車問題診斷報告</h1>
+        
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>📊 系統狀態檢查</h3>
+                    </div>
+                    <div class="card-body">
+                        <button class="btn btn-primary mb-3" onclick="runAllTests()">🔍 開始全面檢查</button>
+                        <div id="testResults"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>🔐 登入狀態檢查</h4>
+                    </div>
+                    <div class="card-body">
+                        <button class="btn btn-info" onclick="checkLoginStatus()">檢查登入狀態</button>
+                        <div id="loginStatus" class="mt-3"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>🌐 API 連接測試</h4>
+                    </div>
+                    <div class="card-body">
+                        <button class="btn btn-success" onclick="testApiConnection()">測試 API 連接</button>
+                        <div id="apiStatus" class="mt-3"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>🛒 購物車功能測試</h4>
+                    </div>
+                    <div class="card-body">
+                        <button class="btn btn-warning" onclick="testCartFunctionality()">測試購物車功能</button>
+                        <div id="cartStatus" class="mt-3"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>📝 修復建議</h4>
+                    </div>
+                    <div class="card-body" id="suggestions">
+                        <p>點擊上方測試按鈕開始診斷...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        const API_BASE_URL = 'https://jadeapi-production.up.railway.app';
+        
+        function log(message, type = 'info') {
+            console.log(`[CART-DIAGNOSTIC] ${message}`);
+        }
+
+        function addTestResult(title, status, message, suggestions = []) {
+            const resultsDiv = document.getElementById('testResults');
+            const statusClass = status === 'pass' ? 'test-pass' : status === 'fail' ? 'test-fail' : 'test-warning';
+            const statusIcon = status === 'pass' ? '✅' : status === 'fail' ? '❌' : '⚠️';
+            
+            const resultHtml = `
+                <div class="test-result ${statusClass}">
+                    <h5>${statusIcon} ${title}</h5>
+                    <p>${message}</p>
+                    ${suggestions.length > 0 ? `
+                        <div class="mt-2">
+                            <strong>建議：</strong>
+                            <ul>
+                                ${suggestions.map(s => `<li>${s}</li>`).join('')}
+                            </ul>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+            
+            resultsDiv.innerHTML += resultHtml;
+        }
+
+        function checkLoginStatus() {
+            const loginDiv = document.getElementById('loginStatus');
+            
+            // 檢查 localStorage 中的登入資料
+            const memberId = localStorage.getItem('memberId');
+            const authToken = localStorage.getItem('authToken') || localStorage.getItem('token');
+            const currentUser = localStorage.getItem('currentUser');
+            
+            let statusHtml = '<h6>LocalStorage 檢查：</h6>';
+            statusHtml += `<p><strong>會員 ID:</strong> ${memberId || '❌ 未找到'}</p>`;
+            statusHtml += `<p><strong>認證 Token:</strong> ${authToken ? '✅ 已設定' : '❌ 未找到'}</p>`;
+            statusHtml += `<p><strong>用戶資料:</strong> ${currentUser ? '✅ 已設定' : '❌ 未找到'}</p>`;
+            
+            if (currentUser) {
+                try {
+                    const user = JSON.parse(currentUser);
+                    statusHtml += `<div class="code-block"><strong>用戶資料:</strong><br><pre>${JSON.stringify(user, null, 2)}</pre></div>`;
+                } catch (e) {
+                    statusHtml += `<p class="status-fail">用戶資料格式錯誤</p>`;
+                }
+            }
+            
+            loginDiv.innerHTML = statusHtml;
+            
+            // 回傳登入狀態供其他函式使用
+            return {
+                isLoggedIn: !!memberId && !!authToken,
+                memberId,
+                authToken,
+                currentUser
+            };
+        }
+
+        async function testApiConnection() {
+            const apiDiv = document.getElementById('apiStatus');
+            apiDiv.innerHTML = '<p>🔄 測試中...</p>';
+            
+            try {
+                // 測試基本 API 連接
+                const response = await axios.get(`${API_BASE_URL}/api/health`, {
+                    timeout: 10000
+                });
+                
+                apiDiv.innerHTML = `
+                    <div class="alert alert-success">
+                        <h6>✅ API 連接成功</h6>
+                        <p><strong>狀態碼:</strong> ${response.status}</p>
+                        <p><strong>API URL:</strong> ${API_BASE_URL}</p>
+                    </div>
+                `;
+                
+                return true;
+            } catch (error) {
+                apiDiv.innerHTML = `
+                    <div class="alert alert-danger">
+                        <h6>❌ API 連接失敗</h6>
+                        <p><strong>錯誤:</strong> ${error.message}</p>
+                        <p><strong>API URL:</strong> ${API_BASE_URL}</p>
+                    </div>
+                `;
+                
+                return false;
+            }
+        }
+
+        async function testCartFunctionality() {
+            const cartDiv = document.getElementById('cartStatus');
+            cartDiv.innerHTML = '<p>🔄 測試購物車功能...</p>';
+            
+            // 首先檢查登入狀態
+            const loginStatus = checkLoginStatus();
+            
+            if (!loginStatus.isLoggedIn) {
+                cartDiv.innerHTML = `
+                    <div class="alert alert-warning">
+                        <h6>⚠️ 無法測試購物車</h6>
+                        <p>需要先登入才能測試購物車功能</p>
+                    </div>
+                `;
+                return false;
+            }
+            
+            try {
+                // 測試購物車 API
+                const cartUrl = `${API_BASE_URL}/api/Carts/user/${loginStatus.memberId}`;
+                log(`Testing cart API: ${cartUrl}`);
+                
+                const response = await axios.get(cartUrl, {
+                    headers: loginStatus.authToken ? {
+                        'Authorization': `Bearer ${loginStatus.authToken}`
+                    } : {},
+                    timeout: 10000
+                });
+                
+                cartDiv.innerHTML = `
+                    <div class="alert alert-success">
+                        <h6>✅ 購物車 API 正常</h6>
+                        <p><strong>狀態碼:</strong> ${response.status}</p>
+                        <p><strong>購物車項目數量:</strong> ${response.data?.length || 0}</p>
+                        <div class="code-block">
+                            <strong>回應資料:</strong><br>
+                            <pre>${JSON.stringify(response.data, null, 2)}</pre>
+                        </div>
+                    </div>
+                `;
+                
+                return true;
+            } catch (error) {
+                cartDiv.innerHTML = `
+                    <div class="alert alert-danger">
+                        <h6>❌ 購物車 API 失敗</h6>
+                        <p><strong>錯誤:</strong> ${error.message}</p>
+                        <p><strong>狀態碼:</strong> ${error.response?.status || 'N/A'}</p>
+                        ${error.response?.data ? `
+                            <div class="code-block">
+                                <strong>錯誤詳情:</strong><br>
+                                <pre>${JSON.stringify(error.response.data, null, 2)}</pre>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+                
+                return false;
+            }
+        }
+
+        async function runAllTests() {
+            const resultsDiv = document.getElementById('testResults');
+            resultsDiv.innerHTML = '<h5>🔄 執行全面檢查...</h5>';
+            
+            // 測試 1: 環境檢查
+            const currentUrl = window.location.href;
+            const isProduction = currentUrl.includes('netlify.app');
+            addTestResult(
+                '環境檢查',
+                'pass',
+                `當前環境: ${isProduction ? '生產環境 (Netlify)' : '本地環境'}<br>
+                 URL: ${currentUrl}<br>
+                 API 基礎 URL: ${API_BASE_URL}`
+            );
+            
+            // 測試 2: 登入狀態
+            const loginStatus = checkLoginStatus();
+            addTestResult(
+                '登入狀態檢查',
+                loginStatus.isLoggedIn ? 'pass' : 'fail',
+                loginStatus.isLoggedIn ? 
+                    `用戶已登入 (會員 ID: ${loginStatus.memberId})` : 
+                    '用戶未登入',
+                loginStatus.isLoggedIn ? [] : [
+                    '請先登入系統',
+                    '檢查 localStorage 是否包含有效的認證資料'
+                ]
+            );
+            
+            // 測試 3: API 連接
+            const apiResult = await testApiConnection();
+            addTestResult(
+                'API 連接測試',
+                apiResult ? 'pass' : 'fail',
+                apiResult ? 
+                    'API 服務器回應正常' : 
+                    'API 服務器無法連接',
+                apiResult ? [] : [
+                    '檢查網路連接',
+                    '檢查 Railway API 服務狀態',
+                    '檢查 CORS 設定'
+                ]
+            );
+            
+            // 測試 4: 購物車功能 (只有在有登入的情況下)
+            if (loginStatus.isLoggedIn) {
+                const cartResult = await testCartFunctionality();
+                addTestResult(
+                    '購物車功能測試',
+                    cartResult ? 'pass' : 'fail',
+                    cartResult ? 
+                        '購物車 API 回應正常' : 
+                        '購物車 API 無法正常工作',
+                    cartResult ? [] : [
+                        '檢查認證 token 是否有效',
+                        '檢查會員 ID 是否正確',
+                        '檢查後端購物車 API 端點'
+                    ]
+                );
+            }
+            
+            // 生成總結建議
+            generateSuggestions(loginStatus.isLoggedIn, apiResult);
+        }
+
+        function generateSuggestions(isLoggedIn, apiConnected) {
+            const suggestionsDiv = document.getElementById('suggestions');
+            
+            let suggestions = '<h5>🔧 修復建議：</h5>';
+            
+            if (!isLoggedIn) {
+                suggestions += `
+                    <div class="alert alert-warning">
+                        <h6>❗ 登入問題</h6>
+                        <ul>
+                            <li>請確保用戶已正確登入系統</li>
+                            <li>檢查 localStorage 中的 memberId 和 authToken</li>
+                            <li>如果登入頁面有問題，請檢查認證流程</li>
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            if (!apiConnected) {
+                suggestions += `
+                    <div class="alert alert-danger">
+                        <h6>🌐 API 連接問題</h6>
+                        <ul>
+                            <li>檢查 Railway API 服務是否正常運行</li>
+                            <li>確認 Netlify 的代理設定正確</li>
+                            <li>檢查是否有 CORS 相關錯誤</li>
+                            <li>確認 API URL 配置正確</li>
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            if (isLoggedIn && apiConnected) {
+                suggestions += `
+                    <div class="alert alert-success">
+                        <h6>✅ 系統狀態良好</h6>
+                        <p>登入狀態和 API 連接都正常，購物車應該可以正常工作。</p>
+                        <p>如果仍有問題，請：</p>
+                        <ul>
+                            <li>清除瀏覽器快取</li>
+                            <li>檢查瀏覽器控制台是否有其他錯誤</li>
+                            <li>確認購物車資料格式正確</li>
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            suggestionsDiv.innerHTML = suggestions;
+        }
+
+        // 頁面載入時自動執行基本檢查
+        window.addEventListener('load', function() {
+            log('JADE Cart Diagnostic Tool loaded');
+            checkLoginStatus();
+        });
+    </script>
+</body>
+</html>

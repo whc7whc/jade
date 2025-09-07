@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>購物車 API 測試</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .result { margin: 10px 0; padding: 10px; border: 1px solid #ddd; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button { margin: 5px; padding: 10px 15px; }
+        input { margin: 5px; padding: 5px; }
+        pre { background: #f5f5f5; padding: 10px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>購物車 API 測試工具</h1>
+    
+    <div>
+        <label>會員 ID: <input type="number" id="memberId" value="1" placeholder="輸入會員ID"></label>
+        <button onclick="testGetCart()">測試獲取購物車</button>
+        <button onclick="testAPIConnection()">測試 API 連接</button>
+        <button onclick="clearResults()">清除結果</button>
+    </div>
+    
+    <div id="results"></div>
+
+    <script>
+        const API_BASE_URL = 'https://jadeapi-production.up.railway.app';
+        
+        function addResult(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong>: ${message}`;
+            document.getElementById('results').appendChild(div);
+        }
+        
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+        
+        async function testAPIConnection() {
+            addResult('測試 API 基礎連接...', 'info');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/health`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                addResult(`API 健康檢查回應狀態: ${response.status}`, response.ok ? 'success' : 'error');
+                
+                if (response.ok) {
+                    const data = await response.text();
+                    addResult(`API 健康檢查回應: <pre>${data}</pre>`, 'success');
+                } else {
+                    addResult(`API 連接失敗: ${response.statusText}`, 'error');
+                }
+            } catch (error) {
+                addResult(`API 連接錯誤: ${error.message}`, 'error');
+                console.error('API 連接錯誤:', error);
+            }
+        }
+        
+        async function testGetCart() {
+            const memberId = document.getElementById('memberId').value;
+            if (!memberId) {
+                addResult('請輸入會員 ID', 'error');
+                return;
+            }
+            
+            addResult(`測試獲取會員 ${memberId} 的購物車...`, 'info');
+            
+            try {
+                const url = `${API_BASE_URL}/api/Carts/user/${memberId}`;
+                addResult(`請求 URL: ${url}`, 'info');
+                
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        // 如果有 token，可以加上 Authorization header
+                        // 'Authorization': 'Bearer YOUR_TOKEN_HERE'
+                    }
+                });
+                
+                addResult(`HTTP 狀態碼: ${response.status} ${response.statusText}`, response.ok ? 'success' : 'error');
+                
+                const responseText = await response.text();
+                addResult(`原始回應內容: <pre>${responseText}</pre>`, 'info');
+                
+                if (response.ok) {
+                    try {
+                        const data = JSON.parse(responseText);
+                        addResult(`JSON 解析成功: <pre>${JSON.stringify(data, null, 2)}</pre>`, 'success');
+                        
+                        if (data.success) {
+                            const items = data.data?.items || [];
+                            addResult(`購物車項目數量: ${items.length}`, 'success');
+                            if (items.length > 0) {
+                                items.forEach((item, index) => {
+                                    addResult(`項目 ${index + 1}: ${item.productName || 'Unknown'} x ${item.quantity || 0}`, 'info');
+                                });
+                            }
+                        } else {
+                            addResult(`API 回應失敗: ${data.message || '未知錯誤'}`, 'error');
+                        }
+                    } catch (parseError) {
+                        addResult(`JSON 解析失敗: ${parseError.message}`, 'error');
+                    }
+                } else {
+                    addResult(`請求失敗: ${response.status} ${response.statusText}`, 'error');
+                }
+                
+            } catch (error) {
+                addResult(`請求錯誤: ${error.message}`, 'error');
+                console.error('購物車測試錯誤:', error);
+            }
+        }
+        
+        // 頁面載入時自動測試 API 連接
+        window.onload = () => {
+            addResult('頁面載入完成，準備測試...', 'info');
+            testAPIConnection();
+        };
+    </script>
+</body>
+</html>

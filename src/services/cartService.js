@@ -1,23 +1,44 @@
 // 購物車 API 服務
 import axios from 'axios'
 
-// 使用相對路徑，讓代理處理
-const API_BASE_URL = '/api'
+// 根據環境決定 API 基礎 URL
+const getApiBaseUrl = () => {
+  // 在生產環境中，直接使用完整的 API URL
+  if (process.env.NODE_ENV === 'production') {
+    return process.env.VUE_APP_API_BASE_URL || 'https://jadeapi-production.up.railway.app'
+  }
+  
+  // 在開發環境中，可以使用代理或完整 URL
+  if (process.env.VUE_APP_API_BASE_URL) {
+    return process.env.VUE_APP_API_BASE_URL
+  }
+  
+  // 預設使用生產 API
+  return 'https://jadeapi-production.up.railway.app'
+}
+
+const API_BASE_URL = getApiBaseUrl()
 
 class CartService {
   constructor() {
     this.http = axios.create({
       baseURL: API_BASE_URL,
-      timeout: 10000,
+      timeout: 15000, // 增加超時時間
       headers: {
         'Content-Type': 'application/json'
       }
     })
 
     // 直接後端 API URL（用於新的購物車功能）
-    this.directApiUrl = `${process.env.VUE_APP_API_BASE_URL || 'https://jadeapi-production.up.railway.app'}/api/Carts`
+    this.directApiUrl = `${API_BASE_URL}/api/Carts`
 
-    // 請求攔截器 - 添加認證 token
+    console.log('🔧 CartService 初始化:', {
+      environment: process.env.NODE_ENV,
+      baseURL: API_BASE_URL,
+      directApiUrl: this.directApiUrl
+    })
+
+    // 請求攔截器 - 添加認證 token 和詳細日誌
     this.http.interceptors.request.use(
       (config) => {
         const token = localStorage.getItem('token') ||
@@ -26,9 +47,19 @@ class CartService {
         if (token) {
           config.headers.Authorization = `Bearer ${token}`
         }
+        
+        console.log('📤 CartService API 請求:', {
+          method: config.method?.toUpperCase(),
+          url: config.url,
+          baseURL: config.baseURL,
+          fullUrl: `${config.baseURL}${config.url}`,
+          hasAuth: !!token
+        })
+        
         return config
       },
       (error) => {
+        console.error('❌ 請求攔截器錯誤:', error)
         return Promise.reject(error)
       }
     )
@@ -261,6 +292,9 @@ class CartService {
   /**
    * 取得購物車內容
    */
+  /**
+   * 取得購物車內容
+   */
   async getCart(userId) {
     if (!userId) {
       throw new Error('未提供用戶 ID')
@@ -268,7 +302,13 @@ class CartService {
     
     try {
       console.log(`🔄 正在從 API 獲取用戶 ${userId} 的購物車...`)
-      const response = await this.http.get(`/api/Carts/user/${userId}`)
+      
+      // 使用正確的 API 端點路徑
+      const url = `/api/Carts/user/${userId}`
+      const fullUrl = `${this.http.defaults.baseURL}${url}`
+      console.log('🌐 完整請求 URL:', fullUrl)
+      
+      const response = await this.http.get(url)
       console.log('📦 原始 API 回應:', response.data)
       
       // 根據新的 API 格式處理回應
@@ -288,12 +328,47 @@ class CartService {
       }
     } catch (error) {
       console.error('❌ 獲取購物車失敗:', error)
+      console.error('❌ 錯誤詳情:', {
+        message: error.message,
+        code: error.code,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        url: error.config?.url,
+        fullUrl: `${this.http.defaults.baseURL}${error.config?.url || ''}`
+      })
+      
+      // 提供更詳細的錯誤訊息
+      let errorMessage = '獲取購物車失敗'
+      
+      if (error.code === 'ECONNREFUSED') {
+        errorMessage = 'API 服務器連接被拒絕，請檢查服務器狀態'
+      } else if (error.code === 'ENOTFOUND') {
+        errorMessage = '無法找到 API 服務器，請檢查網路連線'
+      } else if (error.response) {
+        // 有 HTTP 回應但狀態碼錯誤
+        errorMessage = `API 錯誤 (${error.response.status}): ${error.response.data?.message || error.response.statusText}`
+      } else if (error.request) {
+        // 請求已發送但沒有收到回應
+        errorMessage = '請求超時或網路連線問題'
+      } else {
+        // 其他錯誤
+        errorMessage = error.message || '未知錯誤'
+      }
       
       return {
         success: false,
         data: { items: [], subtotal: 0, total: 0 },
-        error: error.response?.data?.message || error.message || '獲取購物車失敗',
-        message: `無法載入購物車，API 地址: ${this.http.defaults.baseURL}`
+        error: errorMessage,
+        message: `無法載入購物車: ${errorMessage}`,
+        debug: {
+          baseURL: this.http.defaults.baseURL,
+          requestUrl: url,
+          fullUrl: `${this.http.defaults.baseURL}${url}`,
+          userId: userId,
+          errorCode: error.code,
+          errorName: error.name,
+          responseStatus: error.response?.status
+        }
       }
     }
   }

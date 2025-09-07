@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登入狀態檢查</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .status-box { padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .success { background-color: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .warning { background-color: #fff3cd; border: 1px solid #ffeaa7; color: #856404; }
+        .error { background-color: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .info { background-color: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+        pre { background: #f5f5f5; padding: 10px; overflow-x: auto; border-radius: 3px; }
+        table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .test-actions { margin: 20px 0; }
+        .test-actions button { background: #007bff; color: white; border: none; border-radius: 3px; }
+        .test-actions button:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 JADE 購物車登入狀態檢查工具</h1>
+        
+        <div class="test-actions">
+            <button onclick="checkLoginStatus()">🔄 重新檢查登入狀態</button>
+            <button onclick="simulateLogin()">🔑 模擬登入</button>
+            <button onclick="clearStorage()">🧹 清除 Storage</button>
+            <button onclick="showAllStorage()">📦 顯示所有 Storage</button>
+        </div>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        function addResult(message, type = 'info', title = '') {
+            const div = document.createElement('div');
+            div.className = `status-box ${type}`;
+            const titleText = title ? `<strong>${title}</strong><br>` : '';
+            div.innerHTML = `${titleText}${message}`;
+            document.getElementById('results').appendChild(div);
+        }
+        
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+        
+        function checkLoginStatus() {
+            clearResults();
+            
+            // 檢查各種登入相關的 localStorage 項目
+            const authData = {
+                memberId: localStorage.getItem('memberId'),
+                authToken: localStorage.getItem('authToken'),
+                auth_token: localStorage.getItem('auth_token'),
+                token: localStorage.getItem('token'),
+                currentUser: localStorage.getItem('currentUser'),
+                user: localStorage.getItem('user'),
+                isSeller: localStorage.getItem('isSeller'),
+                isLogin: localStorage.getItem('isLogin')
+            };
+            
+            addResult('開始檢查登入狀態...', 'info', '🔍 登入狀態檢查');
+            
+            // 檢查 memberId
+            if (authData.memberId && authData.memberId !== 'null' && authData.memberId !== '') {
+                const parsedId = parseInt(authData.memberId, 10);
+                if (!isNaN(parsedId) && parsedId > 0) {
+                    addResult(`✅ 發現有效的會員 ID: ${parsedId}`, 'success', 'memberId 檢查');
+                } else {
+                    addResult(`❌ memberId 存在但無法解析: "${authData.memberId}"`, 'error', 'memberId 檢查');
+                }
+            } else {
+                addResult(`❌ 沒有找到有效的 memberId: "${authData.memberId}"`, 'error', 'memberId 檢查');
+            }
+            
+            // 檢查 token
+            const hasToken = !!(authData.authToken || authData.auth_token || authData.token);
+            if (hasToken) {
+                const tokenType = authData.authToken ? 'authToken' : (authData.auth_token ? 'auth_token' : 'token');
+                addResult(`✅ 發現認證 token (${tokenType})`, 'success', 'Token 檢查');
+            } else {
+                addResult('❌ 沒有找到任何認證 token', 'error', 'Token 檢查');
+            }
+            
+            // 檢查 currentUser
+            if (authData.currentUser && authData.currentUser !== 'null') {
+                try {
+                    const userData = JSON.parse(authData.currentUser);
+                    addResult(`✅ 發現用戶資料: ${JSON.stringify(userData, null, 2)}`, 'success', 'currentUser 檢查');
+                } catch (e) {
+                    addResult(`⚠️ currentUser 存在但不是有效的 JSON: "${authData.currentUser}"`, 'warning', 'currentUser 檢查');
+                }
+            } else {
+                addResult(`❌ 沒有找到 currentUser: "${authData.currentUser}"`, 'error', 'currentUser 檢查');
+            }
+            
+            // 購物車登入檢查邏輯
+            const hasStandardAuth = !!(hasToken && authData.currentUser && authData.currentUser !== 'null');
+            const hasMemberAuth = !!(authData.memberId && authData.memberId !== 'null' && authData.memberId !== '' && authData.memberId !== 'undefined');
+            const isLoggedIn = hasStandardAuth || hasMemberAuth || !!authData.memberId;
+            
+            addResult(`
+                <strong>最終登入狀態判定:</strong><br>
+                • 標準認證: ${hasStandardAuth ? '✅' : '❌'}<br>
+                • 會員認證: ${hasMemberAuth ? '✅' : '❌'}<br>
+                • 整體狀態: ${isLoggedIn ? '✅ 已登入' : '❌ 未登入'}
+            `, isLoggedIn ? 'success' : 'error', '🎯 最終結果');
+            
+            // 顯示詳細資料
+            const table = `
+                <table>
+                    <tr><th>項目</th><th>值</th><th>狀態</th></tr>
+                    <tr><td>memberId</td><td>${authData.memberId || '(空)'}</td><td>${authData.memberId ? '✅' : '❌'}</td></tr>
+                    <tr><td>authToken</td><td>${authData.authToken ? '***隱藏***' : '(空)'}</td><td>${authData.authToken ? '✅' : '❌'}</td></tr>
+                    <tr><td>auth_token</td><td>${authData.auth_token ? '***隱藏***' : '(空)'}</td><td>${authData.auth_token ? '✅' : '❌'}</td></tr>
+                    <tr><td>token</td><td>${authData.token ? '***隱藏***' : '(空)'}</td><td>${authData.token ? '✅' : '❌'}</td></tr>
+                    <tr><td>currentUser</td><td>${authData.currentUser ? '***隱藏***' : '(空)'}</td><td>${authData.currentUser ? '✅' : '❌'}</td></tr>
+                    <tr><td>isSeller</td><td>${authData.isSeller || '(空)'}</td><td>${authData.isSeller ? '✅' : '❌'}</td></tr>
+                </table>
+            `;
+            
+            addResult(table, 'info', '📋 詳細資料');
+        }
+        
+        function simulateLogin() {
+            // 模擬登入，設置必要的 localStorage 項目
+            localStorage.setItem('memberId', '123');
+            localStorage.setItem('authToken', 'fake-token-12345');
+            localStorage.setItem('currentUser', JSON.stringify({ id: 123, name: '測試用戶', email: 'test@example.com' }));
+            localStorage.setItem('isSeller', 'false');
+            
+            addResult('✅ 已模擬登入狀態', 'success', '🔑 模擬登入');
+            
+            // 重新檢查狀態
+            setTimeout(checkLoginStatus, 500);
+        }
+        
+        function clearStorage() {
+            const keysToRemove = ['memberId', 'authToken', 'auth_token', 'token', 'currentUser', 'user', 'isSeller', 'isLogin'];
+            keysToRemove.forEach(key => localStorage.removeItem(key));
+            
+            addResult('🧹 已清除登入相關的 localStorage 項目', 'warning', '清除 Storage');
+            
+            // 重新檢查狀態
+            setTimeout(checkLoginStatus, 500);
+        }
+        
+        function showAllStorage() {
+            const allItems = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                const value = localStorage.getItem(key);
+                allItems.push({ key, value: value.length > 100 ? value.substring(0, 100) + '...' : value });
+            }
+            
+            if (allItems.length === 0) {
+                addResult('localStorage 是空的', 'info', '📦 所有 localStorage 項目');
+                return;
+            }
+            
+            let table = '<table><tr><th>Key</th><th>Value</th></tr>';
+            allItems.forEach(item => {
+                table += `<tr><td>${item.key}</td><td>${item.value}</td></tr>`;
+            });
+            table += '</table>';
+            
+            addResult(table, 'info', '📦 所有 localStorage 項目');
+        }
+        
+        // 頁面載入時自動檢查
+        window.onload = () => {
+            addResult('頁面載入完成，正在檢查登入狀態...', 'info', '🚀 初始化');
+            checkLoginStatus();
+        };
+    </script>
+</body>
+</html>

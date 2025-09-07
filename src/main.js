@@ -1,6 +1,7 @@
 import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
+import store from './store'
 
 // Bootstrap CSS 和 JS
 import 'bootstrap/dist/css/bootstrap.min.css'
@@ -520,6 +521,7 @@ app.config.globalProperties.$swal = Swal
 
 // 使用插件
 app.use(router)
+app.use(store)
 app.use(NoticePlugin)
 app.use(EventBusPlugin)
 app.use(ToastPlugin)
