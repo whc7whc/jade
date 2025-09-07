@@ -139,7 +139,12 @@ export default {
       getCouponDisabledReason,
       selectCoupon,
       removeCoupon,
-      initialize
+      initialize,
+      
+      // 本地購物車方法
+      calculateLocalCartSummary,
+      loadLocalCart,
+      saveLocalCart
     } = useCart()
 
     const { toasts, showToast, removeToast, getToastIcon } = useToast()
@@ -150,15 +155,75 @@ export default {
 
     // 方法
     const goToCheckout = () => {
-      if (isEmpty.value) {
-        showToast('購物車是空的，無法結帳', 'error')
+      console.log('🛒 結帳按鈕被點擊')
+      
+      // 詳細檢查購物車狀態
+      const localCart = JSON.parse(localStorage.getItem('localCart') || localStorage.getItem('cartItems') || '[]')
+      const sessionCart = JSON.parse(sessionStorage.getItem('cartItems') || '[]')
+      
+      console.log('📊 詳細購物車狀態檢查:', {
+        isEmpty: isEmpty.value,
+        cartItemsLength: cartItems.value.length,
+        cartItems: cartItems.value,
+        localCartLength: localCart.length,
+        localCart: localCart,
+        sessionCartLength: sessionCart.length,
+        sessionCart: sessionCart,
+        loading: loading.value,
+        error: error.value,
+        apiConnected: apiConnected.value
+      })
+      
+      // 如果響應式購物車為空，但本地儲存有資料，重新載入
+      if (isEmpty.value && (localCart.length > 0 || sessionCart.length > 0)) {
+        console.log('🔄 發現本地有購物車資料但響應式狀態為空，重新載入...')
+        
+        // 使用本地資料更新響應式狀態
+        if (localCart.length > 0) {
+          cartItems.value = localCart
+          console.log('📦 從 localStorage 恢復購物車:', localCart)
+        } else if (sessionCart.length > 0) {
+          cartItems.value = sessionCart
+          console.log('📦 從 sessionStorage 恢復購物車:', sessionCart)
+        }
+        
+        // 重新計算購物車總計
+        if (typeof calculateLocalCartSummary === 'function') {
+          calculateLocalCartSummary()
+        }
+      }
+      
+      // 再次檢查購物車狀態
+      if (cartItems.value.length === 0) {
+        console.warn('❌ 購物車確實為空，無法結帳')
+        showToast('購物車是空的，無法結帳。請先添加商品到購物車。', 'error')
+        
+        // 提供添加商品的建議
+        setTimeout(() => {
+          if (confirm('購物車是空的，是否前往商品頁面選購商品？')) {
+            router.push('/')
+          }
+        }, 2000)
         return
       }
       
+      console.log('✅ 購物車有商品，準備跳轉到結帳頁面')
+      console.log('🛒 最終購物車商品:', cartItems.value)
       showToast('正在跳轉到結帳頁面...', 'info')
-      setTimeout(() => {
-        router.push('/checkout')
-      }, 1000)
+      
+      // 立即跳轉，不要延遲
+      console.log('🔄 執行路由跳轉到 /checkout')
+      router.push('/checkout').then(() => {
+        console.log('✅ 成功跳轉到結帳頁面')
+      }).catch(err => {
+        console.error('❌ 路由跳轉失敗:', err)
+        showToast('跳轉失敗，請重試', 'error')
+        
+        // 備用跳轉方法
+        setTimeout(() => {
+          window.location.href = '/checkout'
+        }, 1000)
+      })
     }
 
     const handleSelectCoupon = (coupon) => {

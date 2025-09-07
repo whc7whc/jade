@@ -67,11 +67,26 @@ const routes = [
         // 檢查用戶是否登入
         const memberId = localStorage.getItem('memberId')
         if (!memberId) {
-          console.log('結帳頁面：用戶未登入')
+          console.log('結帳頁面：用戶未登入，檢查本地購物車')
+          
+          // 未登入時檢查本地購物車
+          const localCart = localStorage.getItem('localCart') || sessionStorage.getItem('localCart')
+          if (localCart) {
+            try {
+              const cartData = JSON.parse(localCart)
+              if (cartData && cartData.length > 0) {
+                console.log('結帳頁面：發現本地購物車，商品數量:', cartData.length)
+                return next() // 允許進入結帳頁面
+              }
+            } catch (e) {
+              console.log('結帳頁面：本地購物車解析失敗')
+            }
+          }
+          
           return next('/login?redirect=' + encodeURIComponent(to.fullPath))
         }
 
-        // 檢查購物車是否有商品
+        // 已登入用戶，嘗試檢查 API 購物車
         const cartResponse = await fetch(`${process.env.VUE_APP_API_BASE_URL || 'https://jadeapi-production.up.railway.app'}/Carts/user/${memberId}`)
 
         if (cartResponse.ok) {
@@ -81,9 +96,23 @@ const routes = [
           // API 回應格式：{ success: true, data: { items: [...] } }
           const actualCartData = cartData.data || cartData
           if (!actualCartData || !actualCartData.items || actualCartData.items.length === 0) {
-            console.log('結帳頁面：購物車為空')
+            console.log('結帳頁面：API 購物車為空，檢查本地購物車')
+            
+            // API 購物車為空，檢查本地購物車
+            const localCart = localStorage.getItem('localCart') || sessionStorage.getItem('localCart')
+            if (localCart) {
+              try {
+                const localCartData = JSON.parse(localCart)
+                if (localCartData && localCartData.length > 0) {
+                  console.log('結帳頁面：發現本地購物車，商品數量:', localCartData.length)
+                  return next() // 允許進入結帳頁面
+                }
+              } catch (e) {
+                console.log('結帳頁面：本地購物車解析失敗')
+              }
+            }
 
-            // 購物車為空，顯示提示並導向購物車頁面
+            // 兩個購物車都為空，顯示提示並導向購物車頁面
             setTimeout(() => {
               Swal.fire({
                 icon: 'warning',
@@ -105,12 +134,26 @@ const routes = [
           }
 
           // 購物車有商品，允許進入結帳頁面
-          console.log('結帳頁面：購物車檢查通過，商品數量:', actualCartData.items.length)
+          console.log('結帳頁面：API 購物車檢查通過，商品數量:', actualCartData.items.length)
           next()
         } else {
-          // API 連接失敗，顯示錯誤訊息
-          console.error('結帳頁面：無法獲取購物車資料')
+          // API 連接失敗，檢查本地購物車作為備選
+          console.log('結帳頁面：API 連接失敗，檢查本地購物車')
+          
+          const localCart = localStorage.getItem('localCart') || sessionStorage.getItem('localCart')
+          if (localCart) {
+            try {
+              const localCartData = JSON.parse(localCart)
+              if (localCartData && localCartData.length > 0) {
+                console.log('結帳頁面：使用本地購物車，商品數量:', localCartData.length)
+                return next() // 允許進入結帳頁面
+              }
+            } catch (e) {
+              console.log('結帳頁面：本地購物車解析失敗')
+            }
+          }
 
+          // 無法獲取任何購物車資料，顯示錯誤訊息
           setTimeout(() => {
             Swal.fire({
               icon: 'error',
@@ -127,7 +170,21 @@ const routes = [
       } catch (error) {
         console.error('結帳頁面守衛錯誤:', error)
 
-        // 出現錯誤時導向購物車頁面
+        // 出現錯誤時檢查本地購物車
+        const localCart = localStorage.getItem('localCart') || sessionStorage.getItem('localCart')
+        if (localCart) {
+          try {
+            const localCartData = JSON.parse(localCart)
+            if (localCartData && localCartData.length > 0) {
+              console.log('結帳頁面：錯誤狀況下使用本地購物車，商品數量:', localCartData.length)
+              return next() // 允許進入結帳頁面
+            }
+          } catch (e) {
+            console.log('結帳頁面：本地購物車解析失敗')
+          }
+        }
+
+        // 出現錯誤且無本地購物車時導向購物車頁面
         setTimeout(() => {
           Swal.fire({
             icon: 'error',

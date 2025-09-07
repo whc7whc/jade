@@ -95,6 +95,50 @@ export function useCart() {
   // 購物金相關
   const shoppingCredit = ref(0)
 
+  // 本地購物車輔助函數
+  const loadLocalCart = () => {
+    try {
+      const localCartData = localStorage.getItem('localCart') || localStorage.getItem('cartItems')
+      if (localCartData) {
+        const parsedData = JSON.parse(localCartData)
+        console.log('📦 載入本地購物車:', parsedData)
+        return Array.isArray(parsedData) ? parsedData : []
+      }
+    } catch (error) {
+      console.error('❌ 載入本地購物車失敗:', error)
+    }
+    return []
+  }
+
+  const saveLocalCart = (items) => {
+    try {
+      localStorage.setItem('localCart', JSON.stringify(items))
+      localStorage.setItem('cartItems', JSON.stringify(items)) // 相容性
+      console.log('💾 本地購物車已儲存:', items)
+    } catch (error) {
+      console.error('❌ 儲存本地購物車失敗:', error)
+    }
+  }
+
+  const calculateLocalCartSummary = () => {
+    if (!cartItems.value || cartItems.value.length === 0) {
+      cartSummary.value = { subtotal: 0, total: 0, shipping: 0 }
+      return
+    }
+
+    const subtotal = cartItems.value.reduce((sum, item) => {
+      const price = parseFloat(item.price || item.unitPrice || 0)
+      const quantity = parseInt(item.quantity || 1)
+      return sum + (price * quantity)
+    }, 0)
+
+    const shipping = subtotal > 1000 ? 0 : 100 // 滿1000免運費
+    const total = subtotal + shipping
+
+    cartSummary.value = { subtotal, total, shipping }
+    console.log('🧮 本地購物車計算結果:', cartSummary.value)
+  }
+
   // Toast 提示函數
   const showToast = (message, type = 'info') => {
     const Toast = Swal.mixin({
@@ -162,22 +206,41 @@ export function useCart() {
       
       // 使用購物車專用的登入檢查
       if (!checkCartLoginStatus()) {
-        console.warn('⚠️ 用戶未登入，無法載入購物車')
-        apiConnected.value = false
-        cartItems.value = []
-        cartSummary.value = { subtotal: 0, total: 0 }
-        showToast('請先登入會員帳號', 'warning')
+        console.warn('⚠️ 用戶未登入，嘗試載入本地購物車')
+        
+        // 嘗試載入本地購物車（localStorage）
+        const localCart = loadLocalCart()
+        if (localCart && localCart.length > 0) {
+          console.log('✅ 找到本地購物車資料:', localCart)
+          apiConnected.value = false // API 未連接，但有本地資料
+          cartItems.value = localCart
+          calculateLocalCartSummary()
+          console.log('🛒 本地購物車載入成功，商品數量:', cartItems.value.length)
+        } else {
+          console.log('ℹ️ 無本地購物車資料')
+          apiConnected.value = false
+          cartItems.value = []
+          cartSummary.value = { subtotal: 0, total: 0 }
+        }
         return
       }
 
       // 獲取會員 ID
       const memberId = getCartMemberId()
       if (!memberId) {
-        console.error('❌ 無法獲取會員 ID')
-        apiConnected.value = false
-        cartItems.value = []
-        cartSummary.value = { subtotal: 0, total: 0 }
-        showToast('無法獲取會員資訊，請重新登入', 'error')
+        console.error('❌ 無法獲取會員 ID，使用本地購物車')
+        
+        // 回退到本地購物車
+        const localCart = loadLocalCart()
+        if (localCart && localCart.length > 0) {
+          apiConnected.value = false
+          cartItems.value = localCart
+          calculateLocalCartSummary()
+        } else {
+          apiConnected.value = false
+          cartItems.value = []
+          cartSummary.value = { subtotal: 0, total: 0 }
+        }
         return
       }
       
@@ -540,36 +603,71 @@ export function useCart() {
   }
 
   // 添加商品到購物車
-  const addToCart = async (productId, quantity = 1) => {
+  const addToCart = async (productId, quantity = 1, productData = null) => {
     try {
-      if (!checkCartLoginStatus()) {
-        showToast('請先登入會員帳號', 'warning')
-        return false
+      // 如果用戶已登入，使用 API
+      if (checkCartLoginStatus()) {
+        const memberId = getCartMemberId()
+        if (memberId) {
+          console.log('🛒 API: 添加商品到購物車:', { productId, quantity, memberId })
+          const result = await cartService.addToCart(memberId, productId, quantity)
+          
+          if (result.success) {
+            console.log('✅ API: 成功添加商品到購物車')
+            await loadCartData() // 重新載入購物車資料
+            
+            // 重要：商品添加後，重新驗證已套用的優惠券
+            await validateAppliedCoupon()
+            
+            showToast('商品已添加到購物車', 'success')
+            return true
+          } else {
+            console.warn('⚠️ API: 添加商品到購物車失敗:', result.message)
+            showToast(result.message || '添加失敗', 'error')
+            return false
+          }
+        }
       }
 
-      const memberId = getCartMemberId()
-      if (!memberId) {
-        showToast('無法獲取會員資訊，請重新登入', 'error')
-        return false
-      }
-
-      console.log('🛒 添加商品到購物車:', { productId, quantity, memberId })
-      const result = await cartService.addToCart(memberId, productId, quantity)
+      // 用戶未登入，使用本地購物車
+      console.log('🛒 本地: 添加商品到本地購物車:', { productId, quantity })
       
-      if (result.success) {
-        console.log('✅ 成功添加商品到購物車')
-        await loadCartData() // 重新載入購物車資料
-        
-        // 重要：商品添加後，重新驗證已套用的優惠券
-        await validateAppliedCoupon()
-        
-        showToast('商品已添加到購物車', 'success')
-        return true
+      const currentCart = loadLocalCart()
+      const existingItemIndex = currentCart.findIndex(item => 
+        (item.productId || item.id) === productId
+      )
+
+      if (existingItemIndex >= 0) {
+        // 商品已存在，增加數量
+        currentCart[existingItemIndex].quantity = 
+          (parseInt(currentCart[existingItemIndex].quantity) || 1) + parseInt(quantity)
+        console.log('📦 本地: 更新商品數量')
       } else {
-        console.warn('⚠️ 添加商品到購物車失敗:', result.message)
-        showToast(result.message || '添加失敗', 'error')
-        return false
+        // 新商品，添加到購物車
+        const newItem = {
+          id: productId,
+          productId: productId,
+          productName: productData?.name || `商品 ${productId}`,
+          price: productData?.price || 0,
+          unitPrice: productData?.price || 0,
+          quantity: parseInt(quantity),
+          image: productData?.image || '',
+          addedAt: new Date().toISOString()
+        }
+        currentCart.push(newItem)
+        console.log('📦 本地: 添加新商品')
       }
+
+      // 保存到本地儲存
+      saveLocalCart(currentCart)
+      
+      // 更新響應式狀態
+      cartItems.value = currentCart
+      calculateLocalCartSummary()
+      
+      showToast('商品已添加到購物車', 'success')
+      return true
+
     } catch (err) {
       console.error('❌ 添加商品到購物車時發生錯誤:', err)
       showToast('添加失敗，請稍後再試', 'error')
@@ -925,6 +1023,11 @@ export function useCart() {
     
     // 登入相關方法
     checkCartLoginStatus,
-    getCartMemberId
+    getCartMemberId,
+    
+    // 本地購物車方法
+    calculateLocalCartSummary,
+    loadLocalCart,
+    saveLocalCart
   }
 }

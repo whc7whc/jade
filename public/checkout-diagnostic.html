@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>結帳問題診斷工具</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .status-pass { color: #28a745; }
+        .status-fail { color: #dc3545; }
+        .status-warning { color: #ffc107; }
+        .code-block { background: #f8f9fa; padding: 1rem; border-radius: 0.25rem; margin: 0.5rem 0; }
+        .test-result { margin: 1rem 0; padding: 1rem; border-radius: 0.5rem; }
+        .test-pass { background: #d4edda; border: 1px solid #c3e6cb; }
+        .test-fail { background: #f8d7da; border: 1px solid #f5c6cb; }
+        .test-warning { background: #fff3cd; border: 1px solid #ffeaa7; }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1 class="mb-4">🛒 結帳問題診斷工具</h1>
+        
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>🔍 結帳流程檢查</h3>
+                    </div>
+                    <div class="card-body">
+                        <button class="btn btn-primary mb-3" onclick="runCheckoutDiagnosis()">開始檢查結帳問題</button>
+                        <div id="checkoutResults"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>🛒 購物車狀態</h4>
+                    </div>
+                    <div class="card-body">
+                        <button class="btn btn-info" onclick="checkCartStatus()">檢查購物車</button>
+                        <div id="cartStatus" class="mt-3"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>🔐 登入狀態</h4>
+                    </div>
+                    <div class="card-body">
+                        <button class="btn btn-success" onclick="checkLoginForCheckout()">檢查登入</button>
+                        <div id="loginForCheckout" class="mt-3"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>🧪 模擬結帳流程</h4>
+                    </div>
+                    <div class="card-body">
+                        <button class="btn btn-warning" onclick="simulateCheckout()">模擬點擊結帳按鈕</button>
+                        <div id="checkoutSimulation" class="mt-3"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>🔧 修復建議</h4>
+                    </div>
+                    <div class="card-body" id="suggestions">
+                        <p>點擊上方測試按鈕開始診斷...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        const API_BASE_URL = 'https://jadeapi-production.up.railway.app';
+        
+        function log(message, type = 'info') {
+            console.log(`[CHECKOUT-DIAGNOSTIC] ${message}`);
+        }
+
+        function addResult(containerId, title, status, message, details = '') {
+            const container = document.getElementById(containerId);
+            const statusClass = status === 'pass' ? 'test-pass' : status === 'fail' ? 'test-fail' : 'test-warning';
+            const statusIcon = status === 'pass' ? '✅' : status === 'fail' ? '❌' : '⚠️';
+            
+            const resultHtml = `
+                <div class="test-result ${statusClass}">
+                    <h6>${statusIcon} ${title}</h6>
+                    <p>${message}</p>
+                    ${details ? `<div class="code-block">${details}</div>` : ''}
+                </div>
+            `;
+            
+            container.innerHTML += resultHtml;
+        }
+
+        function checkCartStatus() {
+            const cartDiv = document.getElementById('cartStatus');
+            cartDiv.innerHTML = '<p>🔄 檢查購物車狀態...</p>';
+            
+            // 檢查 localStorage 中的購物車資料
+            const cartItems = localStorage.getItem('cartItems');
+            const cartData = cartItems ? JSON.parse(cartItems) : [];
+            
+            // 檢查 sessionStorage
+            const sessionCart = sessionStorage.getItem('cartItems');
+            const sessionCartData = sessionCart ? JSON.parse(sessionCart) : [];
+            
+            let statusHtml = '<h6>購物車資料檢查：</h6>';
+            statusHtml += `<p><strong>localStorage 購物車:</strong> ${cartData.length} 項商品</p>`;
+            statusHtml += `<p><strong>sessionStorage 購物車:</strong> ${sessionCartData.length} 項商品</p>`;
+            
+            if (cartData.length > 0) {
+                statusHtml += `<div class="code-block"><strong>localStorage 購物車內容:</strong><br><pre>${JSON.stringify(cartData, null, 2)}</pre></div>`;
+            }
+            
+            if (sessionCartData.length > 0) {
+                statusHtml += `<div class="code-block"><strong>sessionStorage 購物車內容:</strong><br><pre>${JSON.stringify(sessionCartData, null, 2)}</pre></div>`;
+            }
+            
+            // 檢查 Vuex store (如果可用)
+            if (window.Vue && window.Vue.store) {
+                const storeCart = window.Vue.store.state.cart || {};
+                statusHtml += `<p><strong>Vuex Store 購物車:</strong> ${storeCart.items ? storeCart.items.length : 0} 項商品</p>`;
+            }
+            
+            cartDiv.innerHTML = statusHtml;
+            
+            return {
+                localStorageItems: cartData.length,
+                sessionStorageItems: sessionCartData.length,
+                hasItems: cartData.length > 0 || sessionCartData.length > 0
+            };
+        }
+
+        function checkLoginForCheckout() {
+            const loginDiv = document.getElementById('loginForCheckout');
+            loginDiv.innerHTML = '<p>🔄 檢查登入狀態...</p>';
+            
+            // 檢查所有可能的登入狀態儲存位置
+            const memberId = localStorage.getItem('memberId');
+            const authToken = localStorage.getItem('authToken') || localStorage.getItem('token');
+            const currentUser = localStorage.getItem('currentUser');
+            const isLoggedIn = localStorage.getItem('isLoggedIn');
+            
+            // 檢查 sessionStorage
+            const sessionMemberId = sessionStorage.getItem('memberId');
+            const sessionToken = sessionStorage.getItem('authToken') || sessionStorage.getItem('token');
+            
+            let statusHtml = '<h6>登入資料檢查：</h6>';
+            statusHtml += `<p><strong>localStorage memberId:</strong> ${memberId || '❌ 未找到'}</p>`;
+            statusHtml += `<p><strong>localStorage authToken:</strong> ${authToken ? '✅ 已設定' : '❌ 未找到'}</p>`;
+            statusHtml += `<p><strong>localStorage currentUser:</strong> ${currentUser ? '✅ 已設定' : '❌ 未找到'}</p>`;
+            statusHtml += `<p><strong>localStorage isLoggedIn:</strong> ${isLoggedIn || '❌ 未設定'}</p>`;
+            statusHtml += `<p><strong>sessionStorage memberId:</strong> ${sessionMemberId || '❌ 未找到'}</p>`;
+            statusHtml += `<p><strong>sessionStorage authToken:</strong> ${sessionToken ? '✅ 已設定' : '❌ 未找到'}</p>`;
+            
+            if (currentUser) {
+                try {
+                    const user = JSON.parse(currentUser);
+                    statusHtml += `<div class="code-block"><strong>用戶資料:</strong><br><pre>${JSON.stringify(user, null, 2)}</pre></div>`;
+                } catch (e) {
+                    statusHtml += `<p class="status-fail">用戶資料格式錯誤: ${e.message}</p>`;
+                }
+            }
+            
+            loginDiv.innerHTML = statusHtml;
+            
+            return {
+                hasLocalMemberId: !!memberId,
+                hasLocalToken: !!authToken,
+                hasSessionMemberId: !!sessionMemberId,
+                hasSessionToken: !!sessionToken,
+                isLoggedIn: !!(memberId && authToken) || !!(sessionMemberId && sessionToken)
+            };
+        }
+
+        function simulateCheckout() {
+            const simulationDiv = document.getElementById('checkoutSimulation');
+            simulationDiv.innerHTML = '<p>🔄 模擬結帳流程...</p>';
+            
+            // 檢查購物車狀態
+            const cartStatus = checkCartStatus();
+            const loginStatus = checkLoginForCheckout();
+            
+            let simulationHtml = '<h6>模擬結帳檢查：</h6>';
+            
+            // 步驟 1: 檢查購物車是否為空
+            if (!cartStatus.hasItems) {
+                simulationHtml += `
+                    <div class="alert alert-danger">
+                        <strong>❌ 步驟 1 失敗:</strong> 購物車是空的
+                        <br>這會導致結帳按鈕顯示錯誤訊息而不跳轉
+                    </div>
+                `;
+            } else {
+                simulationHtml += `
+                    <div class="alert alert-success">
+                        <strong>✅ 步驟 1 通過:</strong> 購物車有 ${cartStatus.localStorageItems + cartStatus.sessionStorageItems} 項商品
+                    </div>
+                `;
+            }
+            
+            // 步驟 2: 檢查路由
+            simulationHtml += `
+                <div class="alert alert-info">
+                    <strong>📍 步驟 2:</strong> 檢查路由跳轉
+                    <br>當前 URL: ${window.location.href}
+                    <br>預期跳轉到: ${window.location.origin}/checkout
+                </div>
+            `;
+            
+            // 步驟 3: 模擬跳轉
+            if (cartStatus.hasItems) {
+                simulationHtml += `
+                    <div class="alert alert-warning">
+                        <strong>⚠️ 步驟 3:</strong> 準備測試跳轉
+                        <br><button class="btn btn-sm btn-primary mt-2" onclick="testCheckoutRedirect()">測試跳轉到結帳頁面</button>
+                    </div>
+                `;
+            }
+            
+            simulationDiv.innerHTML = simulationHtml;
+        }
+
+        function testCheckoutRedirect() {
+            log('Testing checkout redirect');
+            
+            // 先檢查結帳頁面是否存在
+            fetch('/checkout')
+                .then(response => {
+                    if (response.ok) {
+                        // 頁面存在，嘗試跳轉
+                        window.location.href = '/checkout';
+                    } else {
+                        alert('❌ 結帳頁面不存在或有問題 (HTTP ' + response.status + ')');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error testing checkout page:', error);
+                    // 即使檢查失敗，也嘗試跳轉
+                    window.location.href = '/checkout';
+                });
+        }
+
+        async function runCheckoutDiagnosis() {
+            const resultsDiv = document.getElementById('checkoutResults');
+            resultsDiv.innerHTML = '<h5>🔄 執行結帳診斷...</h5>';
+            
+            // 診斷 1: 購物車狀態
+            const cartStatus = checkCartStatus();
+            if (cartStatus.hasItems) {
+                addResult('checkoutResults', '購物車狀態', 'pass', `購物車有商品 (共 ${cartStatus.localStorageItems + cartStatus.sessionStorageItems} 項)`);
+            } else {
+                addResult('checkoutResults', '購物車狀態', 'fail', '購物車是空的，這是無法進入結帳的主要原因');
+            }
+            
+            // 診斷 2: 登入狀態
+            const loginStatus = checkLoginForCheckout();
+            if (loginStatus.isLoggedIn) {
+                addResult('checkoutResults', '登入狀態', 'pass', '用戶已登入');
+            } else {
+                addResult('checkoutResults', '登入狀態', 'warning', '用戶未登入，可能影響結帳流程');
+            }
+            
+            // 診斷 3: 路由檢查
+            try {
+                const checkoutResponse = await fetch('/checkout');
+                if (checkoutResponse.ok) {
+                    addResult('checkoutResults', '結帳頁面', 'pass', '結帳頁面可正常訪問');
+                } else {
+                    addResult('checkoutResults', '結帳頁面', 'fail', `結帳頁面回應錯誤 (HTTP ${checkoutResponse.status})`);
+                }
+            } catch (error) {
+                addResult('checkoutResults', '結帳頁面', 'fail', `無法訪問結帳頁面: ${error.message}`);
+            }
+            
+            // 生成建議
+            generateCheckoutSuggestions(cartStatus, loginStatus);
+        }
+
+        function generateCheckoutSuggestions(cartStatus, loginStatus) {
+            const suggestionsDiv = document.getElementById('suggestions');
+            
+            let suggestions = '<h5>🔧 修復建議：</h5>';
+            
+            if (!cartStatus.hasItems) {
+                suggestions += `
+                    <div class="alert alert-danger">
+                        <h6>❗ 主要問題：購物車為空</h6>
+                        <p><strong>解決方案：</strong></p>
+                        <ul>
+                            <li>先添加商品到購物車</li>
+                            <li>檢查商品添加功能是否正常</li>
+                            <li>確認購物車資料是否正確儲存</li>
+                        </ul>
+                        <button class="btn btn-sm btn-success" onclick="window.location.href='/'">前往商品頁面</button>
+                    </div>
+                `;
+            }
+            
+            if (!loginStatus.isLoggedIn) {
+                suggestions += `
+                    <div class="alert alert-warning">
+                        <h6>⚠️ 建議：登入帳號</h6>
+                        <p>雖然可能不是必須的，但建議先登入以確保結帳流程順暢</p>
+                        <button class="btn btn-sm btn-primary" onclick="window.location.href='/login'">前往登入頁面</button>
+                    </div>
+                `;
+            }
+            
+            if (cartStatus.hasItems && loginStatus.isLoggedIn) {
+                suggestions += `
+                    <div class="alert alert-success">
+                        <h6>✅ 狀態良好</h6>
+                        <p>購物車和登入狀態都正常，結帳應該可以正常進行</p>
+                        <button class="btn btn-sm btn-warning" onclick="testCheckoutRedirect()">測試結帳跳轉</button>
+                    </div>
+                `;
+            }
+            
+            suggestions += `
+                <div class="alert alert-info">
+                    <h6>📝 其他檢查項目：</h6>
+                    <ul>
+                        <li>檢查瀏覽器控制台是否有 JavaScript 錯誤</li>
+                        <li>檢查網路狀態是否正常</li>
+                        <li>嘗試重新整理頁面</li>
+                        <li>清除瀏覽器快取</li>
+                    </ul>
+                </div>
+            `;
+            
+            suggestionsDiv.innerHTML = suggestions;
+        }
+
+        // 頁面載入時自動檢查
+        window.addEventListener('load', function() {
+            log('Checkout diagnostic tool loaded');
+            
+            // 自動檢查基本狀態
+            setTimeout(() => {
+                checkCartStatus();
+                checkLoginForCheckout();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

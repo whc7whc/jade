@@ -45,8 +45,8 @@
     <!-- 結帳按鈕 -->
     <button 
       class="btn checkout-btn w-100" 
-      @click="$emit('checkout')"
-      :disabled="isEmpty"
+      @click="handleCheckout"
+      :disabled="isCheckoutDisabled"
     >
       <i class="fas fa-credit-card"></i> 前往結帳
     </button>
@@ -101,8 +101,46 @@ export default {
     }
   },
   emits: ['checkout'],
+  computed: {
+    isCheckoutDisabled() {
+      // 檢查多個來源的購物車狀態
+      const localCart = JSON.parse(localStorage.getItem('localCart') || localStorage.getItem('cartItems') || '[]')
+      const sessionCart = JSON.parse(sessionStorage.getItem('cartItems') || '[]')
+      
+      // 如果任何地方有商品，就不禁用按鈕
+      const hasLocalItems = localCart.length > 0
+      const hasSessionItems = sessionCart.length > 0
+      const hasPropsItems = !this.isEmpty
+      
+      console.log('🔍 CartSummary 結帳按鈕狀態檢查:', {
+        isEmpty: this.isEmpty,
+        hasLocalItems: hasLocalItems,
+        hasSessionItems: hasSessionItems,
+        hasPropsItems: hasPropsItems,
+        finalDisabled: !(hasLocalItems || hasSessionItems || hasPropsItems)
+      })
+      
+      return !(hasLocalItems || hasSessionItems || hasPropsItems)
+    }
+  },
   methods: {
-    formatPrice
+    formatPrice,
+    handleCheckout() {
+      console.log('🛒 CartSummary: 結帳按鈕被點擊')
+      
+      // 檢查是否真的可以結帳
+      const localCart = JSON.parse(localStorage.getItem('localCart') || localStorage.getItem('cartItems') || '[]')
+      const sessionCart = JSON.parse(sessionStorage.getItem('cartItems') || '[]')
+      
+      if (this.isEmpty && localCart.length === 0 && sessionCart.length === 0) {
+        console.warn('❌ CartSummary: 所有來源的購物車都為空')
+        alert('購物車是空的，請先添加商品！')
+        return
+      }
+      
+      console.log('✅ CartSummary: 發出結帳事件')
+      this.$emit('checkout')
+    }
   }
 }
 </script>
